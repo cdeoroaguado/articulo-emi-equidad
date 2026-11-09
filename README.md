@@ -8,6 +8,7 @@ Artículo de investigación (versión web, generada con bookdown) sobre cómo se
 
 - `index.Rmd` y `01-…09-*.Rmd`: secciones del artículo.
 - `R/prep.R`: lectura, depuración y análisis de la base.
+- `R/exportar_depurada.R` y `R/armar_excel.py`: generan el Excel de la base depurada (N = 348) fuera del repositorio.
 - `R/posthoc_dunn.R`: comparaciones por pares después de Kruskal-Wallis (prueba de Dunn con ajuste de Holm), verificada contra `dunn.test`.
 - `R/afc_ordinal.R`: análisis factorial confirmatorio ordinal (WLSMV) del índice, con ajuste, cargas, AVE y omega categórico.
 - `R/alfa_cronbach.R`: confiabilidad del índice (alfa de Cronbach verificado con `psych`, IC de Feldt y bootstrap, omega de McDonald, versiones ordinales y diagnóstico por ítem). Se puede correr solo con `Rscript R/alfa_cronbach.R`.
