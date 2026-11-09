@@ -15,14 +15,21 @@ dt <- dim_tab
 orden <- c("Dominio del inglés", "Aprendizaje disciplinar", "Pedagogía y recursos", "Motivación y actitudes", "Proyección futura")
 dt <- dt[order(match(dt$dimension, orden), dt$col), ]
 cuenta <- table(factor(dt$dimension, orden))
-k_tab <- tibble(`#` = seq_len(nrow(dt)), Ítem = dt$item, `Uso en este análisis` = dt$uso) |>
-  kable(format = "html", caption = "Ítems Likert del cuestionario según su dimensión", align = c("r", "l", "l")) |>
+tibble(`#` = seq_len(nrow(dt)), Dimensión = dt$dimension, Ítem = dt$item, `Uso en este análisis` = dt$uso) |>
+  kable(format = "html", caption = "Dimensión a la que pertenece cada ítem Likert del cuestionario", align = c("r", "l", "l", "l")) |>
   kable_styling(bootstrap_options = c("condensed"), full_width = TRUE) |>
+  column_spec(2, bold = TRUE, width = "18%") |>
   row_spec(which(grepl("^Índice", dt$uso)), bold = TRUE, background = "#e7eef6") |>
-  row_spec(which(grepl("^Solo", dt$uso)), italic = TRUE)
-ini <- 1
-for (dname in orden) { k_tab <- pack_rows(k_tab, paste0(dname, " (", cuenta[dname], " ítems)"), ini, ini + cuenta[dname] - 1); ini <- ini + cuenta[dname] }
-k_tab
+  row_spec(which(grepl("^Solo", dt$uso)), italic = TRUE) |>
+  row_spec(cumsum(cuenta)[-length(cuenta)], extra_css = "border-bottom: 2px solid #7a8191;")
+```
+
+```{r}
+dt |> mutate(dimension = factor(dimension, orden)) |> group_by(Dimensión = dimension) |>
+  summarise(`N.º de ítems` = n(),
+            `Ítems en el índice` = sum(grepl("^Índice", uso)),
+            `Ítems solo en la versión de 7` = sum(grepl("^Solo", uso))) |>
+  tab("Resumen de ítems por dimensión", align = c("l", "r", "r", "r"))
 ```
 
 Las dimensiones corresponden a las secciones del formulario: *Experiencia lingüística en asignaturas dictadas en inglés (dominio del inglés)*, *Aprendizaje en asignaturas dictadas en inglés (aprendizaje disciplinar)*, *Pedagogía y recursos para el aprendizaje*, *Motivación y actitudes* y *Pensando más adelante* (proyección futura). En azul y negrita, los ítems del índice; en cursiva, los que solo entran en la versión ampliada de 7 ítems.
@@ -81,12 +88,12 @@ textos <- c(
   "Logré un buen desempeño académico en las asignaturas, a pesar de que fueron dictadas en inglés.",
   "En mis cursos del programa en inglés, aprendí igual que en los cursos impartidos en español.")
 orig <- c("conceptos", "barrera", "ingles_desemp", "buen_desemp", "aprendi_igual")
-tibble(Ítem = textos,
+tibble(Dimensión = "Aprendizaje disciplinar", Ítem = textos,
        Media = f(sapply(orig, function(i) mean(d[[i]]))),
        DE = f(sapply(orig, function(i) sd(d[[i]]))),
        `% de acuerdo` = pct(sapply(orig, function(i) mean(d[[i]] >= 4))),
        Asimetría = f(sapply(orig, function(i) skew(d[[i]])))) |>
-  tab(paste0("Descriptivos de los ítems del índice de éxito percibido (N = ", N, ")"), align = c("l", rep("r", 4)))
+  tab(paste0("Descriptivos de los ítems del índice de éxito percibido (N = ", N, ")"), align = c("l", "l", rep("r", 4)))
 ```
 
 Valores en la escala original (el ítem de barrera sin invertir). % de acuerdo = respuestas 4 o 5.
@@ -258,7 +265,7 @@ cg <- cargas_afc; cg$sen <- cargas_sen$est.std
 interp_carga <- ifelse(cg$est.std >= .70,
   "Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su varianza con el factor).",
   "Carga aceptable, pero la más baja del modelo. El ítem comparte menos de la mitad de su varianza con el factor, aunque supera con holgura el mínimo de 0,50.")
-tibble(Ítem = unname(etq5[cg$rhs]),
+tibble(Dimensión = "Aprendizaje disciplinar", Ítem = unname(etq5[cg$rhs]),
        `λ estandarizada` = f(cg$est.std),
        EE = f(cg$se, 3),
        `IC 95 %` = paste(f(cg$ci.lower), "–", f(cg$ci.upper)),
@@ -266,8 +273,8 @@ tibble(Ítem = unname(etq5[cg$rhs]),
        `λ (5 categorías)` = f(cg$sen),
        Interpretación = interp_carga) |>
   rename(`R²` = R2) |>
-  tab("Cargas factoriales estandarizadas del AFC ordinal", align = c("l", "r", "r", "r", "r", "r", "l")) |>
-  kable_styling(full_width = TRUE) |> row_spec(which(cg$est.std < .70), bold = TRUE) |> column_spec(7, width = "38%")
+  tab("Cargas factoriales estandarizadas del AFC ordinal", align = c("l", "l", "r", "r", "r", "r", "r", "l")) |>
+  kable_styling(full_width = TRUE) |> row_spec(which(cg$est.std < .70), bold = TRUE) |> column_spec(8, width = "36%")
 ```
 
 Todas las cargas son significativas (p < 0,001). R² = proporción de la varianza de la respuesta latente de cada ítem que explica el factor. La última columna numérica muestra las cargas del modelo de sensibilidad.
