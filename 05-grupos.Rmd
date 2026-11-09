@@ -68,4 +68,77 @@ Como el índice tiene asimetría negativa y efecto techo, las comparaciones se h
 med_g <- function(v, nivel) median(d$EXITO[d[[v]] == nivel])
 ```
 
+## Comparaciones por pares {#posthoc}
+
+```{r include=FALSE}
+source("R/posthoc_dunn.R", encoding = "UTF-8")
+tabla_dunn <- function(x, cap) {
+  sig <- x$p_holm < .05
+  tibble(`Grupos comparados` = paste(x$g1, "vs.", x$g2),
+         n = paste(x$n1, "/", x$n2),
+         Medianas = paste(f(x$med1, 1), "/", f(x$med2, 1)),
+         z = f(x$z),
+         `p sin ajustar` = fp(x$p),
+         `p ajustado (Holm)` = fp(x$p_holm),
+         r = f(x$r),
+         Resultado = ifelse(sig, "Diferencia significativa", ifelse(x$p < .05, "No significativa tras el ajuste", "No significativa"))) |>
+    tab(cap, align = c("l", "r", "r", "r", "r", "r", "r", "l")) |>
+    row_spec(which(sig), bold = TRUE, background = "#e7eef6")
+}
+n_sig <- function(x) sum(x$p_holm < .05)
+```
+
+El Kruskal-Wallis indica si hay diferencias **en algún lugar** entre los grupos, pero no **entre cuáles**. Para saberlo se aplicó la prueba de Dunn (1964), que compara cada par de grupos usando los mismos rangos del Kruskal-Wallis. Como se hacen muchas comparaciones a la vez, la probabilidad de encontrar alguna diferencia por azar aumenta; por eso los valores p se ajustaron con el método de Holm (1979), que controla ese riesgo. Una diferencia se considera significativa cuando el **p ajustado** es menor que 0,05. El tamaño del efecto es r = |z| / √N (0,10 pequeño, 0,30 mediano, 0,50 grande). El código está en `R/posthoc_dunn.R` y se verificó contra el paquete `dunn.test`.
+
+### Estrato
+
+```{r}
+tabla_dunn(dunn_estrato, "Comparaciones por pares entre estratos (prueba de Dunn, ajuste de Holm)")
+```
+
+De las `r nrow(dunn_estrato)` comparaciones, `r n_sig(dunn_estrato)` son significativas: el **estrato 5** frente a los **estratos 1 y 2**. En esos casos, el 50 % de los estudiantes de estrato 5 tiene un índice de `r f(dunn_estrato$med2[dunn_estrato$g1 == "1" & dunn_estrato$g2 == "5"], 1)` o más, frente a `r f(dunn_estrato$med1[dunn_estrato$g1 == "1" & dunn_estrato$g2 == "5"], 1)` en el estrato 1 y `r f(dunn_estrato$med1[dunn_estrato$g1 == "2" & dunn_estrato$g2 == "5"], 1)` en el estrato 2. El estrato 6 frente al 1 queda cerca del límite (p ajustado = `r fp(dunn_estrato$p_holm[dunn_estrato$g1 == "1" & dunn_estrato$g2 == "6"])`). Los estratos medios (3 y 4) no se diferencian de ningún otro.
+
+La diferencia, por tanto, está entre los **extremos** de la escala socioeconómica y no es un escalón entre cada estrato y el siguiente. Los efectos son pequeños (r ≤ `r f(max(dunn_estrato$r))`), y el estrato 1 tiene solo `r dunn_estrato$n1[1]` estudiantes, lo que limita la potencia de sus comparaciones.
+
+### Educación de los padres
+
+```{r}
+tabla_dunn(dunn_edu, "Comparaciones por pares según el nivel educativo más alto de los padres (prueba de Dunn, ajuste de Holm)")
+```
+
+Solo `r n_sig(dunn_edu)` de las `r nrow(dunn_edu)` comparaciones es significativa: **técnico/tecnólogo frente a posgrado** (p ajustado = `r fp(dunn_edu$p_holm[dunn_edu$g1 == "Técnico/Tecnólogo" & dunn_edu$g2 == "Posgrado"])`, r = `r f(dunn_edu$r[dunn_edu$g1 == "Técnico/Tecnólogo" & dunn_edu$g2 == "Posgrado"])`). Las demás no resisten el ajuste por comparaciones múltiples, y no todas siguen un orden creciente: el grupo técnico/tecnólogo puntúa algo por debajo de bachillerato, aunque sin diferencia significativa. El grupo de primaria tiene solo `r dunn_edu$n1[1]` estudiantes: su mediana es la más baja, pero no hay potencia para detectar diferencias con él. Para el artículo conviene unir primaria con bachillerato.
+
+### Programa (variable de control)
+
+```{r}
+tabla_dunn(dunn_programa, "Comparaciones por pares entre programas (prueba de Dunn, ajuste de Holm)")
+```
+
+Las `r n_sig(dunn_programa)` comparaciones son significativas: **Negocios Internacionales > Administración de Empresas > Contaduría Pública**. Son los efectos más grandes de todas las comparaciones por pares (r hasta `r f(max(dunn_programa$r))`, entre pequeño y mediano). Esto confirma que el programa debe controlarse en los modelos.
+
+### Síntesis de las comparaciones
+
+```{r}
+tibble(
+  Variable = c("Colegio bilingüe", "Padres universitarios", "Tipo de colegio", "Estrato", "Educación de los padres", "Programa (control)", "Género (control)"),
+  `Prueba global` = c("Mann-Whitney", "Mann-Whitney", "Mann-Whitney", "Kruskal-Wallis", "Kruskal-Wallis", "Kruskal-Wallis", "Mann-Whitney"),
+  `¿Diferencia global?` = c("Sí", "Sí", "Sí", "Sí", "Sí", "Sí", "No"),
+  `Dónde está la diferencia` = c(
+    "Bilingüe > no bilingüe",
+    "Al menos un padre universitario > ninguno",
+    "Privado > público",
+    paste0("Solo entre extremos: estrato 5 > estratos 1 y 2 (", n_sig(dunn_estrato), " de ", nrow(dunn_estrato), " pares)"),
+    paste0("Solo posgrado > técnico/tecnólogo (", n_sig(dunn_edu), " de ", nrow(dunn_edu), " pares)"),
+    paste0("Todos los pares: NI > AE > CP (", n_sig(dunn_programa), " de ", nrow(dunn_programa), " pares)"),
+    "Sin diferencias")
+) |> tab("Resumen: qué grupos difieren en el índice de éxito percibido", align = c("l", "l", "l", "l"))
+```
+
+**Referencias de esta sección**
+
+- Dunn, O. J. (1964). Multiple comparisons using rank sums. *Technometrics, 6*(3), 241–252.
+- Holm, S. (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics, 6*(2), 65–70.
+
+## Interpretación
+
 El colegio bilingüe tiene el efecto más grande de las cuatro variables demográficas: el 50 % de los estudiantes de colegio bilingüe tiene un índice de `r f(med_g("bilingue", 1), 1)` o más, frente a `r f(med_g("bilingue", 0), 1)` entre quienes vienen de colegio no bilingüe. En estrato, ese valor central sube de `r f(med_g("estrato", 1), 1)` en el estrato 1 a `r f(med_g("estrato", 5), 1)` en el estrato 5. El programa tiene un efecto todavía mayor (ε² = `r f(k_prog$eps2, 3)`), así que debe controlarse en cualquier modelo. Las diferencias por género no son significativas.
