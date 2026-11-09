@@ -2,7 +2,7 @@
 
 Artículo de investigación (versión web, generada con bookdown) sobre cómo se relacionan los aspectos demográficos (tipo de colegio, colegio bilingüe, estrato y educación de los padres) con la autopercepción del éxito en cursos dictados en inglés (EMI).
 
-**Leer el artículo:** https://cdeoroaguado.github.io/libro-emi-equidad/
+**Leer el artículo:** https://cdeoroaguado.github.io/articulo-emi-equidad/
 
 ## Estructura
 
