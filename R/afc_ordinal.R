@@ -1,7 +1,7 @@
 # Análisis factorial confirmatorio (AFC) ordinal del índice de éxito percibido --
 # Modelo de un factor con 5 ítems tratados como ordinales. Estimador WLSMV
 # (mínimos cuadrados ponderados con media y varianza ajustadas) sobre
-# correlaciones policóricas. Se usa desde el capítulo 3 del libro; también
+# correlaciones policóricas. Se usa desde la sección 3 del artículo; también
 # puede correrse solo: Rscript R/afc_ordinal.R
 
 if (!exists("d")) source("R/prep.R", encoding = "UTF-8")

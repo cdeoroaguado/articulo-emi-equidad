@@ -22,10 +22,10 @@ d |> group_by(`Colegio bilingüe` = ifelse(bilingue == 1, "Sí", "No")) |>
   tab("Uso de los recursos de apoyo de la universidad según colegio bilingüe (exploratorio)", align = c("l", "r", "r", "r"))
 ```
 
-## Reproducir este libro {-}
+## Reproducir este artículo {-}
 
 1. Coloque el Excel de la encuesta en la carpeta superior a `libro_emi/` (no se incluye en el repositorio por contener datos personales).
 2. Abra `libro_emi.Rproj` en RStudio.
 3. En la pestaña *Build*, pulse *Build Book*, o ejecute `bookdown::render_book("index.Rmd")`.
 
-El libro se genera en la carpeta `docs/`, que es la que publica GitHub Pages.
+El artículo se genera en la carpeta `docs/`, que es la que publica GitHub Pages.

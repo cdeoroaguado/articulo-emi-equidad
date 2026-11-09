@@ -1,7 +1,7 @@
 # Confiabilidad del índice de éxito percibido en EMI ---------------------------
 # Calcula el alfa de Cronbach (fórmula y verificación con psych), sus intervalos
 # de confianza, el diagnóstico por ítem, el omega de McDonald y las versiones
-# ordinales (correlaciones policóricas). Se usa desde el capítulo 3 del libro;
+# ordinales (correlaciones policóricas). Se usa desde la sección 3 del artículo;
 # también puede correrse solo: Rscript R/alfa_cronbach.R
 
 if (!exists("d")) source("R/prep.R", encoding = "UTF-8")

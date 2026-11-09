@@ -26,7 +26,7 @@ tab <- function(x, cap, align = NULL) kable(x, format = "html", caption = cap, a
 
 <p class="pregunta">¿Cómo influyen los aspectos demográficos en la autopercepción del éxito en cursos impartidos en inglés (EMI)?</p>
 
-Este libro reúne el análisis exploratorio de la base actualizada de la encuesta *Uso del inglés como medio de instrucción en instituciones de educación superior*. Su propósito es apoyar la decisión del equipo sobre el próximo artículo, que aborda la autopercepción del éxito en EMI desde el marco de **equidad y acceso**.
+Este artículo reúne el análisis exploratorio de la base actualizada de la encuesta *Uso del inglés como medio de instrucción en instituciones de educación superior*. Su propósito es analizar la autopercepción del éxito en EMI desde el marco de **equidad y acceso**.
 
 **Hallazgos principales**
 
@@ -39,4 +39,4 @@ Este libro reúne el análisis exploratorio de la base actualizada de la encuest
 
 **Cómo leerlo.** Use el índice de la izquierda o las flechas laterales para pasar de capítulo. Todas las cifras se calculan directamente en R a partir de la base, de modo que se actualizan si cambia la depuración.
 
-**Privacidad.** El repositorio contiene solo el código y el libro compilado. La base cruda (con nombres, correos y códigos de estudiante) no se publica.
+**Privacidad.** El repositorio contiene solo el código y la versión web del artículo. La base cruda (con nombres, correos y códigos de estudiante) no se publica.

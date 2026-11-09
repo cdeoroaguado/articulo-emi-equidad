@@ -6,8 +6,6 @@ bookdown::gitbook:
       collapse: section
       before: |
         <li><strong>&nbsp;Equidad y éxito en EMI</strong></li>
-      after: |
-        <li><a href="https://github.com/rstudio/bookdown" target="_blank">Hecho con bookdown</a></li>
     download: null
     sharing: null
     search: yes
