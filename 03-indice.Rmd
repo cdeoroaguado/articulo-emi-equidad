@@ -1,6 +1,77 @@
 # Cómo medir la autopercepción del éxito {#indice}
 
-La encuesta no tiene notas ni promedio académico, así que el "éxito" es autopercibido. Se construyó un índice con los cinco ítems del bloque de aprendizaje disciplinar que hablan directamente de comprender y rendir en las asignaturas. Cada ítem va de 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo), y el índice es el promedio de los cinco.
+La encuesta no tiene notas ni promedio académico, así que el "éxito" es autopercibido. Se construyó un índice con cinco ítems de la dimensión **Aprendizaje disciplinar** del cuestionario, los que hablan directamente de comprender y rendir en las asignaturas. Cada ítem va de 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo), y el índice es el promedio de los cinco.
+
+## Dimensiones del instrumento y origen de los ítems {#dimensiones}
+
+```{r dims, include=FALSE}
+source("R/dimensiones.R", encoding = "UTF-8")
+```
+
+El cuestionario tiene `r nrow(dim_tab)` ítems Likert de cinco puntos, organizados en `r length(unique(dim_tab$dimension))` dimensiones. La tabla muestra a qué dimensión pertenece cada ítem y cuáles se usan en este análisis.
+
+```{r}
+dt <- dim_tab
+orden <- c("Dominio del inglés", "Aprendizaje disciplinar", "Pedagogía y recursos", "Motivación y actitudes", "Proyección futura")
+dt <- dt[order(match(dt$dimension, orden), dt$col), ]
+cuenta <- table(factor(dt$dimension, orden))
+k_tab <- tibble(`#` = seq_len(nrow(dt)), Ítem = dt$item, `Uso en este análisis` = dt$uso) |>
+  kable(format = "html", caption = "Ítems Likert del cuestionario según su dimensión", align = c("r", "l", "l")) |>
+  kable_styling(bootstrap_options = c("condensed"), full_width = TRUE) |>
+  row_spec(which(grepl("^Índice", dt$uso)), bold = TRUE, background = "#e7eef6") |>
+  row_spec(which(grepl("^Solo", dt$uso)), italic = TRUE)
+ini <- 1
+for (dname in orden) { k_tab <- pack_rows(k_tab, paste0(dname, " (", cuenta[dname], " ítems)"), ini, ini + cuenta[dname] - 1); ini <- ini + cuenta[dname] }
+k_tab
+```
+
+Las dimensiones corresponden a las secciones del formulario: *Experiencia lingüística en asignaturas dictadas en inglés (dominio del inglés)*, *Aprendizaje en asignaturas dictadas en inglés (aprendizaje disciplinar)*, *Pedagogía y recursos para el aprendizaje*, *Motivación y actitudes* y *Pensando más adelante* (proyección futura). En azul y negrita, los ítems del índice; en cursiva, los que solo entran en la versión ampliada de 7 ítems.
+
+**Por qué estos cinco ítems.** La dimensión Aprendizaje disciplinar tiene siete ítems, y el índice usa cinco. Se dejaron por fuera dos:
+
+- *"Mi conocimiento previo de la materia me ayudó a comprender las temáticas del curso"*: no mide éxito, sino un recurso previo del estudiante. En el modelo conceptual sería un antecedente, no parte del resultado.
+- *"Me resultó fácil expresar mis ideas y opiniones en inglés durante las clases"*: es la repetición exacta de un ítem de la dimensión Dominio del inglés (capítulo \@ref(base)) y mide habilidad oral en el idioma, no aprendizaje de la materia.
+
+Los otros cinco ítems preguntan por el resultado del aprendizaje en la asignatura (entender los conceptos, rendir bien, aprender igual que en español, que el inglés no impida demostrar lo aprendido). Por eso el índice representa **una sola dimensión del instrumento**, y el análisis factorial confirmatorio de la sección \@ref(afc) pone a prueba precisamente esa estructura.
+
+### Descriptivos de los ítems del índice
+
+```{r likert, fig.cap="Distribución de las respuestas a los cinco ítems del índice (dimensión Aprendizaje disciplinar). Las barras se centran en la respuesta neutral; el ítem de barrera se muestra con su redacción original, de modo que para él el desacuerdo indica éxito.", fig.height=3.6, fig.width=8.5}
+orig <- c("conceptos", "barrera", "ingles_desemp", "buen_desemp", "aprendi_igual")
+cats <- c("Totalmente en desacuerdo", "Parcialmente en desacuerdo", "Indiferente", "Parcialmente de acuerdo", "Totalmente de acuerdo")
+cols_lk <- c("#b5651d", "#e3b98f", "#c9ccd3", "#93b6dd", "#2b6cb0")
+lk_long <- bind_rows(lapply(seq_along(orig), function(j) {
+  p <- as.numeric(table(factor(d[[orig[j]]], 1:5))) / N
+  tibble(item = c("Conceptos clave", "El inglés fue una barrera", "Inglés ayudó al desempeño", "Buen desempeño", "Aprendí igual")[j],
+         cat = factor(cats, cats), p = p)
+}))
+lk_long <- lk_long |> group_by(item) |>
+  mutate(neg = ifelse(as.integer(cat) <= 2, -p, ifelse(as.integer(cat) == 3, -p / 2, p)),
+         acuerdo = sum(p[as.integer(cat) >= 4])) |> ungroup()
+orden_items <- rev(c("Conceptos clave", "Buen desempeño", "Inglés ayudó al desempeño", "Aprendí igual", "El inglés fue una barrera"))
+# Segmentos explícitos: desde el centro hacia afuera, neutral/2 -> parcial -> total
+seg <- lk_long |> group_by(item) |> group_modify(function(g, key) {
+  p <- g$p
+  tibble(cat = factor(cats[c(3, 2, 1, 3, 4, 5)], cats),
+         xmin = c(-p[3] / 2, -p[3] / 2 - p[2], -p[3] / 2 - p[2] - p[1], 0, p[3] / 2, p[3] / 2 + p[4]),
+         xmax = c(0, -p[3] / 2, -p[3] / 2 - p[2], p[3] / 2, p[3] / 2 + p[4], p[3] / 2 + p[4] + p[5]))
+}) |> ungroup() |> mutate(y = match(item, orden_items))
+etq_pct <- lk_long |> group_by(item) |> summarise(des = sum(p[as.integer(cat) <= 2]), ac = sum(p[as.integer(cat) >= 4])) |>
+  mutate(y = match(item, orden_items))
+ggplot(seg) +
+  geom_rect(aes(xmin = xmin, xmax = xmax, ymin = y - 0.32, ymax = y + 0.32, fill = cat), colour = "white", linewidth = 0.4) +
+  geom_vline(xintercept = 0, colour = "grey40") +
+  geom_text(data = etq_pct, aes(x = -1.04, y = y, label = pct(des)), hjust = 1, size = 3.2, colour = "grey30") +
+  geom_text(data = etq_pct, aes(x = 1.04, y = y, label = pct(ac)), hjust = 0, size = 3.2, colour = "grey30") +
+  annotate("text", x = c(-1.04, 1.04), y = 5.62, label = c("Desacuerdo", "Acuerdo"), hjust = c(1, 0), size = 3, colour = "grey45", fontface = "bold") +
+  scale_y_continuous(breaks = 1:5, labels = orden_items, expand = expansion(add = c(0.4, 0.5))) +
+  scale_fill_manual(values = setNames(cols_lk, cats), breaks = cats, name = NULL) +
+  scale_x_continuous(limits = c(-1.2, 1.2), breaks = seq(-1, 1, .25),
+                     labels = function(x) paste0(abs(round(100 * x)), " %")) +
+  labs(x = "Porcentaje de estudiantes (izquierda: desacuerdo · derecha: acuerdo)", y = NULL) +
+  tema + theme(legend.position = "bottom", panel.grid.major.x = element_line(colour = "grey92")) +
+  guides(fill = guide_legend(nrow = 2))
+```
 
 ```{r}
 textos <- c(
@@ -120,6 +191,40 @@ rownames(fr_tab) <- NULL
 fr_tab |>
   tab("Frecuencias por categoría de respuesta (ítem de barrera ya invertido)", align = c("l", rep("r", 5), "l"))
 ```
+
+#### Diagrama del modelo
+
+```{r afcdiag, fig.cap="Modelo de medida del AFC ordinal. El óvalo es el factor latente (dimensión Aprendizaje disciplinar); los rectángulos son los ítems observados. En las flechas, las cargas estandarizadas (λ); debajo de cada ítem, su varianza residual (1 − R²). Todas las cargas son significativas (p < 0,001).", fig.height=4.6, fig.width=9}
+lam_d <- setNames(cargas_afc$est.std, cargas_afc$rhs)[items5]
+nod <- tibble(it = items5, x = seq(1, 9, length.out = 5), y = 1.6,
+              lab = c("Conceptos\nclave", "Barrera\n(invertido)", "Inglés ayudó\nal desempeño", "Buen\ndesempeño", "Aprendí\nigual"),
+              lam = lam_d, res = 1 - lam_d^2)
+th <- seq(0, 2 * pi, length.out = 200)
+elip <- tibble(x = 5 + 2.1 * cos(th), y = 4.3 + 0.55 * sin(th))
+bw <- 0.75; bh <- 0.38
+# punto de salida de cada flecha en el borde de la elipse
+ang <- atan2((nod$y + bh) - 4.3, nod$x - 5)
+sx <- 5 + 2.1 * cos(ang) * 0.98; sy <- 4.3 + 0.55 * sin(ang) * 0.98
+flechas <- tibble(x = sx, y = sy, xend = nod$x, yend = nod$y + bh + 0.04, lam = nod$lam,
+                  lx = sx + 0.55 * (nod$x - sx), ly = sy + 0.55 * (nod$y + bh - sy))
+ggplot() +
+  geom_segment(data = flechas, aes(x, y, xend = xend, yend = yend, linewidth = lam),
+               colour = azul, arrow = arrow(length = unit(0.22, "cm"), type = "closed")) +
+  scale_linewidth(range = c(0.6, 1.6), guide = "none") +
+  geom_label(data = flechas, aes(lx, ly, label = f(lam)), size = 3.6, label.size = 0, fill = "white", fontface = "bold") +
+  geom_polygon(data = elip, aes(x, y), fill = "#e7eef6", colour = azul, linewidth = 0.8) +
+  annotate("text", x = 5, y = 4.3, label = "Éxito percibido en EMI\n(Aprendizaje disciplinar)", size = 4, fontface = "bold", colour = "grey15", lineheight = 0.95) +
+  geom_rect(data = nod, aes(xmin = x - bw, xmax = x + bw, ymin = y - bh, ymax = y + bh), fill = "white", colour = "grey20") +
+  geom_text(data = nod, aes(x, y, label = lab), size = 3.3, lineheight = 0.9) +
+  geom_segment(data = nod, aes(x = x, xend = x, y = y - bh - 0.55, yend = y - bh - 0.03),
+               colour = "grey55", arrow = arrow(length = unit(0.18, "cm"), type = "closed")) +
+  geom_point(data = nod, aes(x, y - bh - 0.75), shape = 21, size = 11, fill = "white", colour = "grey55") +
+  geom_text(data = nod, aes(x, y - bh - 0.75, label = f(res)), size = 3, colour = "grey30") +
+  annotate("text", x = 0.05, y = 0.47, label = "Residuo", hjust = 0, size = 3.1, colour = "grey40") +
+  coord_equal(xlim = c(0, 10), ylim = c(0.2, 4.95)) + theme_void()
+```
+
+Las cargas más altas están en *Conceptos clave* (`r f(lam_d["conceptos"])`) e *Inglés ayudó al desempeño* (`r f(lam_d["ingles_desemp"])`): son los ítems que mejor representan la dimensión. *Barrera* tiene la carga más baja (`r f(lam_d["barrera_r"])`) y la mayor varianza residual (`r f(1 - lam_d["barrera_r"]^2)`): más de la mitad de lo que mide no lo comparte con el factor.
 
 #### Ajuste del modelo
 
