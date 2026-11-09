@@ -24,6 +24,7 @@ Valores en la escala original (el ítem de barrera sin invertir). % de acuerdo =
 
 ```{r confiab, include=FALSE}
 source("R/alfa_cronbach.R", encoding = "UTF-8")
+source("R/afc_ordinal.R", encoding = "UTF-8")
 ic <- function(x) paste(f(x[1], 3), "–", f(x[2], 3))
 nivel <- function(x) ifelse(x >= .90, "excelente", ifelse(x >= .80, "buena", ifelse(x >= .70, "aceptable", "insuficiente")))
 ```
@@ -79,7 +80,7 @@ Carga factorial: análisis factorial de un factor por máxima verosimilitud. r �
 
 ```{r}
 tibble(
-  Revisión = c("Unidimensionalidad (ajuste del modelo de un factor)",
+  Revisión = c("Unidimensionalidad (modelo exploratorio de un factor, ML)",
                "Tau-equivalencia (cargas iguales)",
                "Varianzas de los ítems",
                "Nivel de medida"),
@@ -101,13 +102,106 @@ tibble(
   kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |> column_spec(4, width = "40%")
 ```
 
-El ajuste proviene de un análisis factorial exploratorio de un factor. Para el artículo falta un análisis factorial confirmatorio con estimador para datos ordinales (WLSMV).
+Esta revisión usa un análisis factorial exploratorio que trata los ítems como continuos. La estructura se pone a prueba de forma confirmatoria, y con los ítems como ordinales, en la sección siguiente.
+
+### Análisis factorial confirmatorio ordinal {#afc}
+
+Se estimó un modelo de un factor (éxito percibido) con los cinco ítems como indicadores, tratados como **variables ordinales**. El estimador fue **WLSMV** (mínimos cuadrados ponderados con media y varianza ajustadas) sobre la matriz de correlaciones policóricas. Es el estimador recomendado para ítems Likert de pocas categorías y distribución asimétrica (Brown, 2015; Li, 2016). La escala del factor se fijó con varianza igual a 1, de modo que se estiman las cinco cargas. Se usó el paquete `lavaan` (Rosseel, 2012); el código está en `R/afc_ordinal.R`.
+
+**Preparación de las categorías.** Con WLSMV, cada categoría de respuesta genera un umbral, y las categorías con muy pocas respuestas producen umbrales inestables. En `r length(escasos)` ítems la categoría 1 o la 2 tenía menos de 10 respuestas, así que en esos ítems se unieron "totalmente en desacuerdo" y "parcialmente en desacuerdo". El modelo también se estimó con las cinco categorías originales como análisis de sensibilidad.
+
+```{r}
+etq5 <- c(conceptos = "Conceptos clave", barrera_r = "Barrera (invertido)", ingles_desemp = "Inglés ayudó al desempeño",
+          buen_desemp = "Buen desempeño", aprendi_igual = "Aprendí igual")
+fr <- as.data.frame(t(frec)); names(fr) <- paste("Cat.", 1:5)
+fr_tab <- cbind(Ítem = unname(etq5[rownames(fr)]), fr,
+                Tratamiento = ifelse(rownames(fr) %in% escasos, "Categorías 1 y 2 unidas", "5 categorías"))
+rownames(fr_tab) <- NULL
+fr_tab |>
+  tab("Frecuencias por categoría de respuesta (ítem de barrera ya invertido)", align = c("l", rep("r", 5), "l"))
+```
+
+#### Ajuste del modelo
+
+```{r}
+fa_ <- ajuste_afc; fs_ <- ajuste_afc_sen
+fila_aj <- function(ind, val, sen, crit, interp) tibble(Índice = ind, `Modelo principal` = val, `Sensibilidad (5 categorías)` = sen, Criterio = crit, Interpretación = interp)
+trunc1 <- function(x) f(min(x, 1), 3)
+bind_rows(
+  fila_aj("χ² escalado (gl)", paste0(f(fa_["chisq.scaled"]), " (", fa_["df.scaled"], ")"), paste0(f(fs_["chisq.scaled"]), " (", fs_["df.scaled"], ")"),
+          "p > 0,05", paste0("p = ", f(fa_["pvalue.scaled"], 3), ". No se rechaza el modelo: las correlaciones que predice un solo factor no difieren de las observadas.")),
+  fila_aj("CFI robusto", trunc1(fa_["cfi.robust"]), trunc1(fs_["cfi.robust"]), "≥ 0,95",
+          "Ajuste excelente. El modelo de un factor explica casi toda la covariación entre los ítems."),
+  fila_aj("TLI robusto", trunc1(fa_["tli.robust"]), trunc1(fs_["tli.robust"]), "≥ 0,95",
+          if (fa_["tli.robust"] > 1) "Ajuste excelente. El valor estimado supera 1, algo esperable con χ² menor que sus grados de libertad; se reporta como 1,000." else "Ajuste excelente."),
+  fila_aj("RMSEA robusto [IC 90 %]", paste0(f(fa_["rmsea.robust"], 3), " [", f(fa_["rmsea.ci.lower.robust"], 3), "–", f(fa_["rmsea.ci.upper.robust"], 3), "]"),
+          paste0(f(fs_["rmsea.robust"], 3), " [", f(fs_["rmsea.ci.lower.robust"], 3), "–", f(fs_["rmsea.ci.upper.robust"], 3), "]"),
+          "≤ 0,06; límite superior del IC ≤ 0,08",
+          "Ajuste bueno. El límite superior del intervalo queda por debajo de 0,08; el intervalo es amplio porque el modelo tiene pocos grados de libertad."),
+  fila_aj("SRMR", f(fa_["srmr"], 3), f(fs_["srmr"], 3), "≤ 0,08",
+          "Ajuste excelente. Los residuos entre correlaciones observadas y predichas son mínimos.")
+) |> tab("Índices de ajuste del AFC ordinal de un factor (WLSMV)", align = c("l", "r", "r", "l", "l")) |>
+  kable_styling(full_width = TRUE) |> column_spec(5, width = "40%")
+```
+
+Criterios de Hu y Bentler (1999). Con WLSMV se reportan el χ² escalado y las versiones robustas de CFI, TLI y RMSEA. Un modelo de un factor con cinco indicadores tiene 5 grados de libertad, lo que limita la precisión del RMSEA.
+
+#### Cargas factoriales
+
+```{r}
+cg <- cargas_afc; cg$sen <- cargas_sen$est.std
+interp_carga <- ifelse(cg$est.std >= .70,
+  "Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su varianza con el factor).",
+  "Carga aceptable, pero la más baja del modelo. El ítem comparte menos de la mitad de su varianza con el factor, aunque supera con holgura el mínimo de 0,50.")
+tibble(Ítem = unname(etq5[cg$rhs]),
+       `λ estandarizada` = f(cg$est.std),
+       EE = f(cg$se, 3),
+       `IC 95 %` = paste(f(cg$ci.lower), "–", f(cg$ci.upper)),
+       R2 = f(R2_afc[cg$rhs]),
+       `λ (5 categorías)` = f(cg$sen),
+       Interpretación = interp_carga) |>
+  rename(`R²` = R2) |>
+  tab("Cargas factoriales estandarizadas del AFC ordinal", align = c("l", "r", "r", "r", "r", "r", "l")) |>
+  kable_styling(full_width = TRUE) |> row_spec(which(cg$est.std < .70), bold = TRUE) |> column_spec(7, width = "38%")
+```
+
+Todas las cargas son significativas (p < 0,001). R² = proporción de la varianza de la respuesta latente de cada ítem que explica el factor. La última columna numérica muestra las cargas del modelo de sensibilidad.
+
+#### Validez convergente, confiabilidad y residuos
+
+```{r}
+top_mi <- mi[1, ]
+tibble(
+  Indicador = c("Varianza media extraída (AVE)", "Confiabilidad compuesta (escala latente)",
+                "Omega categórico (Green y Yang, 2009)", "Residuo máximo entre correlaciones", "Índice de modificación más alto"),
+  Valor = c(f(ave, 3), f(cr, 3), f(omega_cat, 3), f(res_max, 3),
+            paste0(f(top_mi$mi), " (", etq5[top_mi$lhs], " con ", etq5[top_mi$rhs], ")")),
+  Criterio = c("≥ 0,50 (Fornell y Larcker, 1981)", "≥ 0,70", "≥ 0,70", "< 0,10", "< 3,84 (χ² con 1 gl, p = 0,05)"),
+  Interpretación = c(
+    paste0("Validez convergente adecuada: en promedio, el factor explica el ", pct(ave), " de la varianza de los ítems."),
+    "Confiabilidad alta del constructo latente, calculada con las cargas del AFC.",
+    "Confiabilidad buena del puntaje que realmente se usará (la suma de los ítems en su escala original). Es el valor de omega más apropiado para reportar con ítems ordinales.",
+    "Ningún par de ítems queda mal explicado por el modelo.",
+    "Ninguna correlación entre errores mejoraría el modelo de forma significativa. No hay redundancias ni dimensiones ocultas entre los ítems.")
+) |> tab("Validez convergente, confiabilidad y diagnóstico de residuos del AFC", align = c("l", "r", "l", "l")) |>
+  kable_styling(full_width = TRUE) |> column_spec(4, width = "45%")
+```
+
+#### Interpretación del AFC
+
+El AFC ordinal **confirma que los cinco ítems miden un solo constructo**. En el modelo principal, los cinco índices de ajuste cumplen los criterios de referencia, y ningún residuo ni índice de modificación sugiere una estructura distinta.
+
+Con las categorías originales, las cargas son prácticamente iguales y el ajuste sigue siendo bueno (CFI = `r trunc1(fs_["cfi.robust"])`, SRMR = `r f(fs_["srmr"], 3)`). La única diferencia es que el límite superior del IC del RMSEA llega a `r f(fs_["rmsea.ci.upper.robust"], 3)`: con solo 5 grados de libertad ese intervalo es muy impreciso, y su estimación puntual (`r f(fs_["rmsea.robust"], 3)`) sigue siendo baja. Por tanto, la unión de categorías escasas estabiliza los umbrales pero no cambia las conclusiones.
+
+El ítem de barrera vuelve a ser el más débil (λ = `r f(cg$est.std[cg$rhs == "barrera_r"])`), pero su carga es significativa y supera el mínimo de 0,50. El AFC no da motivos psicométricos para eliminarlo; la decisión puede tomarse por razones conceptuales.
+
+**Para el artículo** se puede reportar, por ejemplo: *"Un análisis factorial confirmatorio con estimador WLSMV mostró un ajuste excelente del modelo unidimensional (χ²(`r fa_["df.scaled"]`) = `r f(fa_["chisq.scaled"])`, p = `r f(fa_["pvalue.scaled"], 3)`; CFI = `r trunc1(fa_["cfi.robust"])`; RMSEA = `r f(fa_["rmsea.robust"], 3)`, IC 90 % [`r f(fa_["rmsea.ci.lower.robust"], 3)`, `r f(fa_["rmsea.ci.upper.robust"], 3)`]; SRMR = `r f(fa_["srmr"], 3)`), con cargas estandarizadas entre `r f(min(cg$est.std))` y `r f(max(cg$est.std))`, AVE = `r f(ave)` y omega categórico = `r f(omega_cat)`."*
 
 ### Interpretación de conjunto
 
-El índice de cinco ítems es **confiable** para el propósito del estudio. Todas las estimaciones superan 0,80, y el modelo de un factor se ajusta bien a los datos, lo que respalda tratar los cinco ítems como una sola medida de éxito percibido.
+El índice de cinco ítems es **confiable y unidimensional**. Todas las estimaciones de confiabilidad superan 0,80, y el análisis factorial confirmatorio ordinal muestra un ajuste excelente del modelo de un factor. Esto respalda tratar los cinco ítems como una sola medida de éxito percibido.
 
-Como no se cumple la tau-equivalencia, el alfa de Cronbach (`r f(alfa, 3)`) es una estimación conservadora. **Para el artículo se recomienda reportar el omega de McDonald (ω = `r f(omega, 3)`, IC 95 % `r ic(ic_boot_omega)`) como coeficiente principal**, junto con el alfa como referencia, y mencionar las versiones ordinales como análisis de sensibilidad.
+Como no se cumple la tau-equivalencia, el alfa de Cronbach (`r f(alfa, 3)`) es una estimación conservadora. **Para el artículo se recomienda reportar como coeficiente principal el omega categórico del AFC (ω = `r f(omega_cat, 3)`)**, que corresponde al puntaje que se usa en los análisis y respeta la naturaleza ordinal de los ítems. El omega de McDonald con correlaciones de Pearson (ω = `r f(omega, 3)`, IC 95 % `r ic(ic_boot_omega)`) y el alfa de Cronbach pueden reportarse como referencia.
 
 El único punto débil es el **ítem de barrera**: carga menos en el factor, tiene la mayor varianza y su eliminación subiría el alfa a `r f(diag_items$alfa_sin_item[2], 3)`. No es un problema grave, porque su discriminación (`r f(diag_items$r_item_total[2])`) supera el mínimo de 0,30, pero conviene decidir si se mantiene. A favor de mantenerlo está que es el único ítem que pregunta directamente por el inglés como obstáculo, que es central para el marco de equidad.
 
@@ -115,6 +209,11 @@ Si se amplía el índice con "Sentía que no era capaz de aprender bien debido a
 
 **Referencias citadas en esta sección**
 
+- Brown, T. A. (2015). *Confirmatory factor analysis for applied research* (2.ª ed.). Guilford Press.
+- Fornell, C. y Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. *Journal of Marketing Research, 18*(1), 39–50.
+- Green, S. B. y Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. *Psychometrika, 74*(1), 155–167.
+- Li, C.-H. (2016). Confirmatory factor analysis with ordinal data: Comparing robust maximum likelihood and diagonally weighted least squares. *Behavior Research Methods, 48*(3), 936–949.
+- Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. *Journal of Statistical Software, 48*(2), 1–36.
 - Dunn, T. J., Baguley, T. y Brunsden, V. (2014). From alpha to omega: A practical solution to the pervasive problem of internal consistency estimation. *British Journal of Psychology, 105*(3), 399–412.
 - Feldt, L. S. (1965). The approximate sampling distribution of Kuder-Richardson reliability coefficient twenty. *Psychometrika, 30*(3), 357–370.
 - Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
@@ -136,5 +235,5 @@ ggplot(d, aes(EXITO)) +
 El índice tiene media `r f(mean(d$EXITO))` (DE `r f(sd(d$EXITO))`) y asimetría negativa (`r f(skew(d$EXITO))`). El `r pct(mean(d$EXITO >= 4))` de los estudiantes tiene un puntaje de 4 o más. Por eso los modelos usan errores estándar robustos y se repiten con una regresión ordinal como prueba de sensibilidad (capítulo \@ref(modelos)).
 
 <div class="decision">
-¿Usamos este índice de 5 ítems, la versión de 4 sin el ítem de barrera o la de 7? Lo ideal sería confirmarlo con un análisis factorial confirmatorio en el artículo.
+¿Usamos este índice de 5 ítems, la versión de 4 sin el ítem de barrera o la de 7? El AFC ordinal respalda la versión de 5 ítems, así que la decisión sobre el ítem de barrera puede tomarse por razones conceptuales.
 </div>

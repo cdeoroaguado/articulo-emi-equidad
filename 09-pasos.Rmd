@@ -3,7 +3,7 @@
 ```{r}
 tibble(Fecha = c("Semana del 9 de noviembre", "Hasta el 15 de noviembre", "Hasta el 22 de noviembre", "Desde el 22 de noviembre"),
        Tarea = c("Responder las decisiones del capítulo 8",
-                 "Base depurada, tablas descriptivas, análisis factorial confirmatorio del índice y modelo de rutas",
+                 "Base depurada, tablas descriptivas y modelo de rutas o SEM (el AFC del índice ya está hecho, sección 3.1)",
                  "Marco conceptual de equidad y acceso en EMI; revisión de literatura",
                  "Inicio de la escritura del artículo"),
        Responsable = c("Todo el equipo", "Carlos", "Kathleen, Lurdes y Jair", "Todo el equipo")) |>

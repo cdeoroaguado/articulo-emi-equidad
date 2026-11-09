@@ -90,7 +90,8 @@
 <ul>
 <li class="chapter" data-level="3.1.1" data-path="indice.html"><a href="indice.html#diagn%C3%B3stico-por-%C3%ADtem"><i class="fa fa-check"></i><b>3.1.1</b> Diagnóstico por ítem</a></li>
 <li class="chapter" data-level="3.1.2" data-path="indice.html"><a href="indice.html#supuestos-y-estructura"><i class="fa fa-check"></i><b>3.1.2</b> Supuestos y estructura</a></li>
-<li class="chapter" data-level="3.1.3" data-path="indice.html"><a href="indice.html#interpretaci%C3%B3n-de-conjunto"><i class="fa fa-check"></i><b>3.1.3</b> Interpretación de conjunto</a></li>
+<li class="chapter" data-level="3.1.3" data-path="indice.html"><a href="indice.html#afc"><i class="fa fa-check"></i><b>3.1.3</b> Análisis factorial confirmatorio ordinal</a></li>
+<li class="chapter" data-level="3.1.4" data-path="indice.html"><a href="indice.html#interpretaci%C3%B3n-de-conjunto"><i class="fa fa-check"></i><b>3.1.4</b> Interpretación de conjunto</a></li>
 </ul></li>
 <li class="chapter" data-level="3.2" data-path="indice.html"><a href="indice.html#efecto-techo"><i class="fa fa-check"></i><b>3.2</b> Efecto techo</a></li>
 </ul></li>
@@ -519,7 +520,7 @@ Interpretación
 <tbody>
 <tr>
 <td style="text-align:left;">
-Unidimensionalidad (ajuste del modelo de un factor)
+Unidimensionalidad (modelo exploratorio de un factor, ML)
 </td>
 <td style="text-align:left;">
 χ²(5) = 5,70, p = 0,336<br>RMSEA = 0,020, TLI = 0,998
@@ -575,16 +576,542 @@ Se cumple parcialmente. Con 5 categorías y efecto techo, las correlaciones de P
 </tr>
 </tbody>
 </table>
-<p>El ajuste proviene de un análisis factorial exploratorio de un factor. Para el artículo falta un análisis factorial confirmatorio con estimador para datos ordinales (WLSMV).</p>
+<p>Esta revisión usa un análisis factorial exploratorio que trata los ítems como continuos. La estructura se pone a prueba de forma confirmatoria, y con los ítems como ordinales, en la sección siguiente.</p>
 </div>
-<div id="interpretación-de-conjunto" class="section level3 hasAnchor" number="3.1.3">
-<h3><span class="header-section-number">3.1.3</span> Interpretación de conjunto<a href="indice.html#interpretaci%C3%B3n-de-conjunto" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>El índice de cinco ítems es <strong>confiable</strong> para el propósito del estudio. Todas las estimaciones superan 0,80, y el modelo de un factor se ajusta bien a los datos, lo que respalda tratar los cinco ítems como una sola medida de éxito percibido.</p>
-<p>Como no se cumple la tau-equivalencia, el alfa de Cronbach (0,804) es una estimación conservadora. <strong>Para el artículo se recomienda reportar el omega de McDonald (ω = 0,849, IC 95 % 0,817 – 0,877) como coeficiente principal</strong>, junto con el alfa como referencia, y mencionar las versiones ordinales como análisis de sensibilidad.</p>
+<div id="afc" class="section level3 hasAnchor" number="3.1.3">
+<h3><span class="header-section-number">3.1.3</span> Análisis factorial confirmatorio ordinal<a href="indice.html#afc" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Se estimó un modelo de un factor (éxito percibido) con los cinco ítems como indicadores, tratados como <strong>variables ordinales</strong>. El estimador fue <strong>WLSMV</strong> (mínimos cuadrados ponderados con media y varianza ajustadas) sobre la matriz de correlaciones policóricas. Es el estimador recomendado para ítems Likert de pocas categorías y distribución asimétrica (Brown, 2015; Li, 2016). La escala del factor se fijó con varianza igual a 1, de modo que se estiman las cinco cargas. Se usó el paquete <code>lavaan</code> (Rosseel, 2012); el código está en <code>R/afc_ordinal.R</code>.</p>
+<p><strong>Preparación de las categorías.</strong> Con WLSMV, cada categoría de respuesta genera un umbral, y las categorías con muy pocas respuestas producen umbrales inestables. En 3 ítems la categoría 1 o la 2 tenía menos de 10 respuestas, así que en esos ítems se unieron “totalmente en desacuerdo” y “parcialmente en desacuerdo”. El modelo también se estimó con las cinco categorías originales como análisis de sensibilidad.</p>
+<table class="table table-striped table-condensed" style="width: auto !important; ">
+<caption>
+<span id="tab:unnamed-chunk-8">Tabla 3.5: </span>Frecuencias por categoría de respuesta (ítem de barrera ya invertido)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Ítem
+</th>
+<th style="text-align:right;">
+Cat. 1
+</th>
+<th style="text-align:right;">
+Cat. 2
+</th>
+<th style="text-align:right;">
+Cat. 3
+</th>
+<th style="text-align:right;">
+Cat. 4
+</th>
+<th style="text-align:right;">
+Cat. 5
+</th>
+<th style="text-align:left;">
+Tratamiento
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Conceptos clave
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+100
+</td>
+<td style="text-align:right;">
+230
+</td>
+<td style="text-align:left;">
+Categorías 1 y 2 unidas
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Barrera (invertido)
+</td>
+<td style="text-align:right;">
+40
+</td>
+<td style="text-align:right;">
+51
+</td>
+<td style="text-align:right;">
+46
+</td>
+<td style="text-align:right;">
+52
+</td>
+<td style="text-align:right;">
+159
+</td>
+<td style="text-align:left;">
+5 categorías
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inglés ayudó al desempeño
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+37
+</td>
+<td style="text-align:right;">
+88
+</td>
+<td style="text-align:right;">
+198
+</td>
+<td style="text-align:left;">
+Categorías 1 y 2 unidas
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Buen desempeño
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:right;">
+90
+</td>
+<td style="text-align:right;">
+233
+</td>
+<td style="text-align:left;">
+Categorías 1 y 2 unidas
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Aprendí igual
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+25
+</td>
+<td style="text-align:right;">
+30
+</td>
+<td style="text-align:right;">
+84
+</td>
+<td style="text-align:right;">
+197
+</td>
+<td style="text-align:left;">
+5 categorías
+</td>
+</tr>
+</tbody>
+</table>
+<div id="ajuste-del-modelo" class="section level4 hasAnchor" number="3.1.3.1">
+<h4><span class="header-section-number">3.1.3.1</span> Ajuste del modelo<a href="indice.html#ajuste-del-modelo" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<table class="table table-striped table-condensed table" style="width: auto !important;  margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-9">Tabla 3.6: </span>Índices de ajuste del AFC ordinal de un factor (WLSMV)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Índice
+</th>
+<th style="text-align:right;">
+Modelo principal
+</th>
+<th style="text-align:right;">
+Sensibilidad (5 categorías)
+</th>
+<th style="text-align:left;">
+Criterio
+</th>
+<th style="text-align:left;">
+Interpretación
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+χ² escalado (gl)
+</td>
+<td style="text-align:right;">
+3,66 (5)
+</td>
+<td style="text-align:right;">
+6,68 (5)
+</td>
+<td style="text-align:left;">
+p &gt; 0,05
+</td>
+<td style="text-align:left;width: 40%; ">
+p = 0,600. No se rechaza el modelo: las correlaciones que predice un solo factor no difieren de las observadas.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CFI robusto
+</td>
+<td style="text-align:right;">
+1,000
+</td>
+<td style="text-align:right;">
+0,999
+</td>
+<td style="text-align:left;">
+≥ 0,95
+</td>
+<td style="text-align:left;width: 40%; ">
+Ajuste excelente. El modelo de un factor explica casi toda la covariación entre los ítems.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TLI robusto
+</td>
+<td style="text-align:right;">
+1,000
+</td>
+<td style="text-align:right;">
+0,997
+</td>
+<td style="text-align:left;">
+≥ 0,95
+</td>
+<td style="text-align:left;width: 40%; ">
+Ajuste excelente. El valor estimado supera 1, algo esperable con χ² menor que sus grados de libertad; se reporta como 1,000.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RMSEA robusto [IC 90 %]
+</td>
+<td style="text-align:right;">
+0,000 [0,000–0,076]
+</td>
+<td style="text-align:right;">
+0,030 [0,000–0,096]
+</td>
+<td style="text-align:left;">
+≤ 0,06; límite superior del IC ≤ 0,08
+</td>
+<td style="text-align:left;width: 40%; ">
+Ajuste bueno. El límite superior del intervalo queda por debajo de 0,08; el intervalo es amplio porque el modelo tiene pocos grados de libertad.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SRMR
+</td>
+<td style="text-align:right;">
+0,011
+</td>
+<td style="text-align:right;">
+0,014
+</td>
+<td style="text-align:left;">
+≤ 0,08
+</td>
+<td style="text-align:left;width: 40%; ">
+Ajuste excelente. Los residuos entre correlaciones observadas y predichas son mínimos.
+</td>
+</tr>
+</tbody>
+</table>
+<p>Criterios de Hu y Bentler (1999). Con WLSMV se reportan el χ² escalado y las versiones robustas de CFI, TLI y RMSEA. Un modelo de un factor con cinco indicadores tiene 5 grados de libertad, lo que limita la precisión del RMSEA.</p>
+</div>
+<div id="cargas-factoriales" class="section level4 hasAnchor" number="3.1.3.2">
+<h4><span class="header-section-number">3.1.3.2</span> Cargas factoriales<a href="indice.html#cargas-factoriales" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<table class="table table-striped table-condensed table" style="width: auto !important;  margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-10">Tabla 3.7: </span>Cargas factoriales estandarizadas del AFC ordinal
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Ítem
+</th>
+<th style="text-align:right;">
+λ estandarizada
+</th>
+<th style="text-align:right;">
+EE
+</th>
+<th style="text-align:right;">
+IC 95 %
+</th>
+<th style="text-align:right;">
+R²
+</th>
+<th style="text-align:right;">
+λ (5 categorías)
+</th>
+<th style="text-align:left;">
+Interpretación
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Conceptos clave
+</td>
+<td style="text-align:right;">
+0,91
+</td>
+<td style="text-align:right;">
+0,020
+</td>
+<td style="text-align:right;">
+0,87 – 0,95
+</td>
+<td style="text-align:right;">
+0,83
+</td>
+<td style="text-align:right;">
+0,91
+</td>
+<td style="text-align:left;width: 38%; ">
+Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su varianza con el factor).
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Barrera (invertido)
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,61
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,038
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,54 – 0,69
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,38
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,62
+</td>
+<td style="text-align:left;font-weight: bold;width: 38%; ">
+Carga aceptable, pero la más baja del modelo. El ítem comparte menos de la mitad de su varianza con el factor, aunque supera con holgura el mínimo de 0,50.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inglés ayudó al desempeño
+</td>
+<td style="text-align:right;">
+0,89
+</td>
+<td style="text-align:right;">
+0,020
+</td>
+<td style="text-align:right;">
+0,85 – 0,93
+</td>
+<td style="text-align:right;">
+0,80
+</td>
+<td style="text-align:right;">
+0,88
+</td>
+<td style="text-align:left;width: 38%; ">
+Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su varianza con el factor).
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Buen desempeño
+</td>
+<td style="text-align:right;">
+0,82
+</td>
+<td style="text-align:right;">
+0,029
+</td>
+<td style="text-align:right;">
+0,77 – 0,88
+</td>
+<td style="text-align:right;">
+0,68
+</td>
+<td style="text-align:right;">
+0,82
+</td>
+<td style="text-align:left;width: 38%; ">
+Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su varianza con el factor).
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Aprendí igual
+</td>
+<td style="text-align:right;">
+0,85
+</td>
+<td style="text-align:right;">
+0,024
+</td>
+<td style="text-align:right;">
+0,80 – 0,90
+</td>
+<td style="text-align:right;">
+0,72
+</td>
+<td style="text-align:right;">
+0,85
+</td>
+<td style="text-align:left;width: 38%; ">
+Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su varianza con el factor).
+</td>
+</tr>
+</tbody>
+</table>
+<p>Todas las cargas son significativas (p &lt; 0,001). R² = proporción de la varianza de la respuesta latente de cada ítem que explica el factor. La última columna numérica muestra las cargas del modelo de sensibilidad.</p>
+</div>
+<div id="validez-convergente-confiabilidad-y-residuos" class="section level4 hasAnchor" number="3.1.3.3">
+<h4><span class="header-section-number">3.1.3.3</span> Validez convergente, confiabilidad y residuos<a href="indice.html#validez-convergente-confiabilidad-y-residuos" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<table class="table table-striped table-condensed table" style="width: auto !important;  margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-11">Tabla 3.8: </span>Validez convergente, confiabilidad y diagnóstico de residuos del AFC
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Indicador
+</th>
+<th style="text-align:right;">
+Valor
+</th>
+<th style="text-align:left;">
+Criterio
+</th>
+<th style="text-align:left;">
+Interpretación
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Varianza media extraída (AVE)
+</td>
+<td style="text-align:right;">
+0,682
+</td>
+<td style="text-align:left;">
+≥ 0,50 (Fornell y Larcker, 1981)
+</td>
+<td style="text-align:left;width: 45%; ">
+Validez convergente adecuada: en promedio, el factor explica el 68 % de la varianza de los ítems.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Confiabilidad compuesta (escala latente)
+</td>
+<td style="text-align:right;">
+0,913
+</td>
+<td style="text-align:left;">
+≥ 0,70
+</td>
+<td style="text-align:left;width: 45%; ">
+Confiabilidad alta del constructo latente, calculada con las cargas del AFC.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Omega categórico (Green y Yang, 2009)
+</td>
+<td style="text-align:right;">
+0,829
+</td>
+<td style="text-align:left;">
+≥ 0,70
+</td>
+<td style="text-align:left;width: 45%; ">
+Confiabilidad buena del puntaje que realmente se usará (la suma de los ítems en su escala original). Es el valor de omega más apropiado para reportar con ítems ordinales.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Residuo máximo entre correlaciones
+</td>
+<td style="text-align:right;">
+0,029
+</td>
+<td style="text-align:left;">
+&lt; 0,10
+</td>
+<td style="text-align:left;width: 45%; ">
+Ningún par de ítems queda mal explicado por el modelo.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Índice de modificación más alto
+</td>
+<td style="text-align:right;">
+0,74 (Barrera (invertido) con Inglés ayudó al desempeño)
+</td>
+<td style="text-align:left;">
+&lt; 3,84 (χ² con 1 gl, p = 0,05)
+</td>
+<td style="text-align:left;width: 45%; ">
+Ninguna correlación entre errores mejoraría el modelo de forma significativa. No hay redundancias ni dimensiones ocultas entre los ítems.
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="interpretación-del-afc" class="section level4 hasAnchor" number="3.1.3.4">
+<h4><span class="header-section-number">3.1.3.4</span> Interpretación del AFC<a href="indice.html#interpretaci%C3%B3n-del-afc" class="anchor-section" aria-label="Anchor link to header"></a></h4>
+<p>El AFC ordinal <strong>confirma que los cinco ítems miden un solo constructo</strong>. En el modelo principal, los cinco índices de ajuste cumplen los criterios de referencia, y ningún residuo ni índice de modificación sugiere una estructura distinta.</p>
+<p>Con las categorías originales, las cargas son prácticamente iguales y el ajuste sigue siendo bueno (CFI = 0,999, SRMR = 0,014). La única diferencia es que el límite superior del IC del RMSEA llega a 0,096: con solo 5 grados de libertad ese intervalo es muy impreciso, y su estimación puntual (0,030) sigue siendo baja. Por tanto, la unión de categorías escasas estabiliza los umbrales pero no cambia las conclusiones.</p>
+<p>El ítem de barrera vuelve a ser el más débil (λ = 0,61), pero su carga es significativa y supera el mínimo de 0,50. El AFC no da motivos psicométricos para eliminarlo; la decisión puede tomarse por razones conceptuales.</p>
+<p><strong>Para el artículo</strong> se puede reportar, por ejemplo: <em>“Un análisis factorial confirmatorio con estimador WLSMV mostró un ajuste excelente del modelo unidimensional (χ²(5) = 3,66, p = 0,600; CFI = 1,000; RMSEA = 0,000, IC 90 % [0,000, 0,076]; SRMR = 0,011), con cargas estandarizadas entre 0,61 y 0,91, AVE = 0,68 y omega categórico = 0,83.”</em></p>
+</div>
+</div>
+<div id="interpretación-de-conjunto" class="section level3 hasAnchor" number="3.1.4">
+<h3><span class="header-section-number">3.1.4</span> Interpretación de conjunto<a href="indice.html#interpretaci%C3%B3n-de-conjunto" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>El índice de cinco ítems es <strong>confiable y unidimensional</strong>. Todas las estimaciones de confiabilidad superan 0,80, y el análisis factorial confirmatorio ordinal muestra un ajuste excelente del modelo de un factor. Esto respalda tratar los cinco ítems como una sola medida de éxito percibido.</p>
+<p>Como no se cumple la tau-equivalencia, el alfa de Cronbach (0,804) es una estimación conservadora. <strong>Para el artículo se recomienda reportar como coeficiente principal el omega categórico del AFC (ω = 0,829)</strong>, que corresponde al puntaje que se usa en los análisis y respeta la naturaleza ordinal de los ítems. El omega de McDonald con correlaciones de Pearson (ω = 0,849, IC 95 % 0,817 – 0,877) y el alfa de Cronbach pueden reportarse como referencia.</p>
 <p>El único punto débil es el <strong>ítem de barrera</strong>: carga menos en el factor, tiene la mayor varianza y su eliminación subiría el alfa a 0,840. No es un problema grave, porque su discriminación (0,49) supera el mínimo de 0,30, pero conviene decidir si se mantiene. A favor de mantenerlo está que es el único ítem que pregunta directamente por el inglés como obstáculo, que es central para el marco de equidad.</p>
 <p>Si se amplía el índice con “Sentía que no era capaz de aprender bien debido a mis limitaciones en inglés” (invertido) y “Me sentí cómodo/a porque entendí las temáticas”, el alfa llega a 0,865, aunque esa versión mezcla aspectos afectivos con el desempeño.</p>
 <p><strong>Referencias citadas en esta sección</strong></p>
 <ul>
+<li>Brown, T. A. (2015). <em>Confirmatory factor analysis for applied research</em> (2.ª ed.). Guilford Press.</li>
+<li>Fornell, C. y Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. <em>Journal of Marketing Research, 18</em>(1), 39–50.</li>
+<li>Green, S. B. y Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. <em>Psychometrika, 74</em>(1), 155–167.</li>
+<li>Li, C.-H. (2016). Confirmatory factor analysis with ordinal data: Comparing robust maximum likelihood and diagonally weighted least squares. <em>Behavior Research Methods, 48</em>(3), 936–949.</li>
+<li>Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. <em>Journal of Statistical Software, 48</em>(2), 1–36.</li>
 <li>Dunn, T. J., Baguley, T. y Brunsden, V. (2014). From alpha to omega: A practical solution to the pervasive problem of internal consistency estimation. <em>British Journal of Psychology, 105</em>(3), 399–412.</li>
 <li>Feldt, L. S. (1965). The approximate sampling distribution of Kuder-Richardson reliability coefficient twenty. <em>Psychometrika, 30</em>(3), 357–370.</li>
 <li>Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. <em>Structural Equation Modeling, 6</em>(1), 1–55.</li>
@@ -603,7 +1130,7 @@ Figura 3.1: Distribución del índice de éxito percibido.
 </div>
 <p>El índice tiene media 4,27 (DE 0,77) y asimetría negativa (-1,08). El 72 % de los estudiantes tiene un puntaje de 4 o más. Por eso los modelos usan errores estándar robustos y se repiten con una regresión ordinal como prueba de sensibilidad (capítulo <a href="modelos.html#modelos">6</a>).</p>
 <div class="decision">
-<p>¿Usamos este índice de 5 ítems, la versión de 4 sin el ítem de barrera o la de 7? Lo ideal sería confirmarlo con un análisis factorial confirmatorio en el artículo.</p>
+<p>¿Usamos este índice de 5 ítems, la versión de 4 sin el ítem de barrera o la de 7? El AFC ordinal respalda la versión de 5 ítems, así que la decisión sobre el ítem de barrera puede tomarse por razones conceptuales.</p>
 </div>
 
 </div>
