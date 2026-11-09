@@ -18,7 +18,7 @@ tema <- theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
         plot.title.position = "plot", axis.title = element_text(colour = "grey35"))
 azul <- "#2b6cb0"; ocre <- "#b5651d"
-tab <- function(x, cap, align = NULL) kable(x, caption = cap, align = align, booktabs = TRUE) |>
+tab <- function(x, cap, align = NULL) kable(x, format = "html", caption = cap, align = align) |>
   kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE, position = "left")
 ```
 

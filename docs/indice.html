@@ -86,7 +86,12 @@
 </ul></li>
 <li class="chapter" data-level="3" data-path="indice.html"><a href="indice.html"><i class="fa fa-check"></i><b>3</b> Cómo medir la autopercepción del éxito</a>
 <ul>
-<li class="chapter" data-level="3.1" data-path="indice.html"><a href="indice.html#confiabilidad"><i class="fa fa-check"></i><b>3.1</b> Confiabilidad</a></li>
+<li class="chapter" data-level="3.1" data-path="indice.html"><a href="indice.html#confiabilidad"><i class="fa fa-check"></i><b>3.1</b> Confiabilidad</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="indice.html"><a href="indice.html#diagn%C3%B3stico-por-%C3%ADtem"><i class="fa fa-check"></i><b>3.1.1</b> Diagnóstico por ítem</a></li>
+<li class="chapter" data-level="3.1.2" data-path="indice.html"><a href="indice.html#supuestos-y-estructura"><i class="fa fa-check"></i><b>3.1.2</b> Supuestos y estructura</a></li>
+<li class="chapter" data-level="3.1.3" data-path="indice.html"><a href="indice.html#interpretaci%C3%B3n-de-conjunto"><i class="fa fa-check"></i><b>3.1.3</b> Interpretación de conjunto</a></li>
+</ul></li>
 <li class="chapter" data-level="3.2" data-path="indice.html"><a href="indice.html#efecto-techo"><i class="fa fa-check"></i><b>3.2</b> Efecto techo</a></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="muestra.html"><a href="muestra.html"><i class="fa fa-check"></i><b>4</b> Perfil de la muestra</a>
@@ -134,7 +139,7 @@
 <p>La encuesta no tiene notas ni promedio académico, así que el “éxito” es autopercibido. Se construyó un índice con los cinco ítems del bloque de aprendizaje disciplinar que hablan directamente de comprender y rendir en las asignaturas. Cada ítem va de 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo), y el índice es el promedio de los cinco.</p>
 <table class="table table-striped table-condensed" style="width: auto !important; ">
 <caption>
-<span id="tab:unnamed-chunk-4">Tabla 3.1: </span><span id="tab:unnamed-chunk-4">Tabla 3.2: </span>Ítems del índice de éxito percibido (N = 348)
+<span id="tab:unnamed-chunk-4">Tabla 3.1: </span>Descriptivos de los ítems del índice de éxito percibido (N = 348)
 </caption>
 <thead>
 <tr>
@@ -151,10 +156,7 @@ DE
 % de acuerdo
 </th>
 <th style="text-align:right;">
-r ítem-total
-</th>
-<th style="text-align:right;">
-α sin el ítem
+Asimetría
 </th>
 </tr>
 </thead>
@@ -173,10 +175,7 @@ Pude entender los conceptos clave de las asignaturas impartidas en inglés.
 95 %
 </td>
 <td style="text-align:right;">
-0,70
-</td>
-<td style="text-align:right;">
-0,757
+-1,97
 </td>
 </tr>
 <tr>
@@ -193,10 +192,7 @@ El inglés fue una barrera para demostrar mi conocimiento sobre los temas de la 
 26 %
 </td>
 <td style="text-align:right;">
-0,49
-</td>
-<td style="text-align:right;">
-0,840
+0,63
 </td>
 </tr>
 <tr>
@@ -213,10 +209,7 @@ Mi nivel de inglés me ayudó a tener un buen desempeño académico en las asign
 82 %
 </td>
 <td style="text-align:right;">
-0,72
-</td>
-<td style="text-align:right;">
-0,726
+-1,48
 </td>
 </tr>
 <tr>
@@ -233,10 +226,7 @@ Logré un buen desempeño académico en las asignaturas, a pesar de que fueron d
 93 %
 </td>
 <td style="text-align:right;">
-0,60
-</td>
-<td style="text-align:right;">
-0,775
+-2,07
 </td>
 </tr>
 <tr>
@@ -253,18 +243,355 @@ En mis cursos del programa en inglés, aprendí igual que en los cursos impartid
 81 %
 </td>
 <td style="text-align:right;">
+-1,44
+</td>
+</tr>
+</tbody>
+</table>
+<p>Valores en la escala original (el ítem de barrera sin invertir). % de acuerdo = respuestas 4 o 5.</p>
+<div id="confiabilidad" class="section level2 hasAnchor" number="3.1">
+<h2><span class="header-section-number">3.1</span> Confiabilidad<a href="indice.html#confiabilidad" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>La confiabilidad se estimó con el alfa de Cronbach y, por las razones que se explican abajo, también con el omega de McDonald y con sus versiones ordinales. Todos los cálculos están en el archivo <code>R/alfa_cronbach.R</code> del repositorio. El alfa se calculó con su fórmula y se verificó contra la función <code>psych::alpha</code>: los dos resultados coinciden.</p>
+<table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-5">Tabla 3.2: </span>Coeficientes de confiabilidad del índice de éxito percibido (N = 348, k = 5 ítems)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Coeficiente
+</th>
+<th style="text-align:left;">
+Base
+</th>
+<th style="text-align:right;">
+Valor
+</th>
+<th style="text-align:right;">
+IC 95 %
+</th>
+<th style="text-align:left;">
+Interpretación
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Alfa de Cronbach
+</td>
+<td style="text-align:left;font-weight: bold;">
+Covarianzas (Pearson)
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,804
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,769 – 0,835 (Feldt)<br>0,760 – 0,839 (bootstrap)
+</td>
+<td style="text-align:left;font-weight: bold;width: 40%; ">
+Consistencia interna buena. Supera el mínimo de 0,70 para investigación (Nunnally y Bernstein, 1994) y el límite inferior del intervalo también lo supera.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alfa estandarizado
+</td>
+<td style="text-align:left;">
+Correlaciones (Pearson)
+</td>
+<td style="text-align:right;">
+0,844
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:left;width: 40%; ">
+Mayor que el alfa bruto (diferencia de 0,040) porque los ítems tienen varianzas muy distintas. Indica que no se cumple la tau-equivalencia.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Omega de McDonald (ω total)
+</td>
+<td style="text-align:left;font-weight: bold;">
+Modelo de un factor (ML)
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,849
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,817 – 0,877 (bootstrap)
+</td>
+<td style="text-align:left;font-weight: bold;width: 40%; ">
+Confiabilidad buena. No exige que los ítems pesen igual, así que es el coeficiente más adecuado aquí y el que se recomienda reportar (Dunn et al., 2014).
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alfa ordinal
+</td>
+<td style="text-align:left;">
+Correlaciones policóricas
+</td>
+<td style="text-align:right;">
+0,907
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:left;width: 40%; ">
+Confiabilidad excelente. Trata las respuestas Likert como ordinales (Zumbo et al., 2007). Es más alto porque corrige la atenuación que producen 5 categorías con efecto techo.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Omega ordinal
+</td>
+<td style="text-align:left;">
+Modelo de un factor sobre correlaciones policóricas
+</td>
+<td style="text-align:right;">
+0,910
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:left;width: 40%; ">
+Confiabilidad excelente. Combina las dos correcciones: cargas distintas y escala ordinal.
+</td>
+</tr>
+</tbody>
+</table>
+<p>IC de Feldt (1965) basado en la distribución F; IC bootstrap percentil con 2.000 remuestreos de estudiantes.</p>
+<div id="diagnóstico-por-ítem" class="section level3 hasAnchor" number="3.1.1">
+<h3><span class="header-section-number">3.1.1</span> Diagnóstico por ítem<a href="indice.html#diagn%C3%B3stico-por-%C3%ADtem" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-6">Tabla 3.3: </span>Diagnóstico de los ítems del índice
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Ítem
+</th>
+<th style="text-align:right;">
+Varianza
+</th>
+<th style="text-align:right;">
+Carga factorial
+</th>
+<th style="text-align:right;">
+r ítem-total corregida
+</th>
+<th style="text-align:right;">
+α si se elimina
+</th>
+<th style="text-align:left;">
+Interpretación
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Conceptos clave
+</td>
+<td style="text-align:right;">
+0,46
+</td>
+<td style="text-align:right;">
+0,81
+</td>
+<td style="text-align:right;">
+0,70
+</td>
+<td style="text-align:right;">
+0,757
+</td>
+<td style="text-align:left;width: 40%; ">
+Ítem fuerte: carga alta y buena discriminación. Eliminarlo bajaría α a 0,757.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;font-weight: bold;">
+Barrera (invertido)
+</td>
+<td style="text-align:right;font-weight: bold;">
+2,12
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,53
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,49
+</td>
+<td style="text-align:right;font-weight: bold;">
+0,840
+</td>
+<td style="text-align:left;font-weight: bold;width: 40%; ">
+Ítem más débil. Discrimina por encima del mínimo de 0,30, pero eliminarlo subiría α a 0,840. Tiene la mayor varianza (2,12), probablemente por su redacción en negativo.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Inglés ayudó al desempeño
+</td>
+<td style="text-align:right;">
+0,99
+</td>
+<td style="text-align:right;">
+0,81
+</td>
+<td style="text-align:right;">
+0,72
+</td>
+<td style="text-align:right;">
+0,726
+</td>
+<td style="text-align:left;width: 40%; ">
+Ítem fuerte: carga alta y buena discriminación. Eliminarlo bajaría α a 0,726.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Buen desempeño
+</td>
+<td style="text-align:right;">
+0,51
+</td>
+<td style="text-align:right;">
+0,69
+</td>
+<td style="text-align:right;">
+0,60
+</td>
+<td style="text-align:right;">
+0,775
+</td>
+<td style="text-align:left;width: 40%; ">
+Ítem adecuado: carga aceptable y buena discriminación. Eliminarlo bajaría α a 0,775.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Aprendí igual
+</td>
+<td style="text-align:right;">
+1,20
+</td>
+<td style="text-align:right;">
+0,78
+</td>
+<td style="text-align:right;">
 0,67
 </td>
 <td style="text-align:right;">
 0,739
 </td>
+<td style="text-align:left;width: 40%; ">
+Ítem fuerte: carga alta y buena discriminación. Eliminarlo bajaría α a 0,739.
+</td>
 </tr>
 </tbody>
 </table>
-<p>Media y porcentaje de acuerdo (respuestas 4 o 5) en la escala original. La correlación ítem-total y el alfa sin el ítem usan el ítem de barrera ya invertido.</p>
-<div id="confiabilidad" class="section level2 hasAnchor" number="3.1">
-<h2><span class="header-section-number">3.1</span> Confiabilidad<a href="indice.html#confiabilidad" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>El alfa de Cronbach del índice es <strong>0,80</strong>. Si se quita el ítem de barrera, sube a 0,84; es el ítem que menos se relaciona con los demás, probablemente por estar redactado en negativo. Si se agregan “Sentía que no era capaz de aprender bien debido a mis limitaciones en inglés” (invertido) y “Me sentí cómodo/a porque entendí las temáticas”, el alfa llega a 0,87.</p>
+<p>Carga factorial: análisis factorial de un factor por máxima verosimilitud. r ítem-total corregida: correlación de cada ítem con la suma de los otros cuatro. Criterios de referencia: carga ≥ 0,40 y r ítem-total ≥ 0,30.</p>
+</div>
+<div id="supuestos-y-estructura" class="section level3 hasAnchor" number="3.1.2">
+<h3><span class="header-section-number">3.1.2</span> Supuestos y estructura<a href="indice.html#supuestos-y-estructura" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Tabla 3.4: </span>Revisión de los supuestos del alfa de Cronbach
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Revisión
+</th>
+<th style="text-align:left;">
+Resultado
+</th>
+<th style="text-align:left;">
+Criterio
+</th>
+<th style="text-align:left;">
+Interpretación
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Unidimensionalidad (ajuste del modelo de un factor)
+</td>
+<td style="text-align:left;">
+χ²(5) = 5,70, p = 0,336<br>RMSEA = 0,020, TLI = 0,998
+</td>
+<td style="text-align:left;">
+p &gt; 0,05; RMSEA ≤ 0,06; TLI ≥ 0,95 (Hu y Bentler, 1999)
+</td>
+<td style="text-align:left;width: 40%; ">
+Se cumple. Un solo factor reproduce bien las correlaciones entre los cinco ítems, así que tiene sentido sumarlos en un índice.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tau-equivalencia (cargas iguales)
+</td>
+<td style="text-align:left;">
+Cargas de 0,53 a 0,81
+</td>
+<td style="text-align:left;">
+Cargas similares entre ítems
+</td>
+<td style="text-align:left;width: 40%; ">
+No se cumple. El ítem de barrera pesa bastante menos que los demás. Por eso el alfa subestima la confiabilidad y el omega es preferible.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Varianzas de los ítems
+</td>
+<td style="text-align:left;">
+De 0,46 a 2,12
+</td>
+<td style="text-align:left;">
+Varianzas similares
+</td>
+<td style="text-align:left;width: 40%; ">
+No se cumple. El ítem de barrera tiene casi cinco veces la varianza del ítem de conceptos, lo que explica la diferencia entre alfa bruto y estandarizado.
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nivel de medida
+</td>
+<td style="text-align:left;">
+Likert de 5 puntos, asimetría negativa
+</td>
+<td style="text-align:left;">
+Variables continuas
+</td>
+<td style="text-align:left;width: 40%; ">
+Se cumple parcialmente. Con 5 categorías y efecto techo, las correlaciones de Pearson se atenúan; las versiones ordinales corrigen ese sesgo.
+</td>
+</tr>
+</tbody>
+</table>
+<p>El ajuste proviene de un análisis factorial exploratorio de un factor. Para el artículo falta un análisis factorial confirmatorio con estimador para datos ordinales (WLSMV).</p>
+</div>
+<div id="interpretación-de-conjunto" class="section level3 hasAnchor" number="3.1.3">
+<h3><span class="header-section-number">3.1.3</span> Interpretación de conjunto<a href="indice.html#interpretaci%C3%B3n-de-conjunto" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>El índice de cinco ítems es <strong>confiable</strong> para el propósito del estudio. Todas las estimaciones superan 0,80, y el modelo de un factor se ajusta bien a los datos, lo que respalda tratar los cinco ítems como una sola medida de éxito percibido.</p>
+<p>Como no se cumple la tau-equivalencia, el alfa de Cronbach (0,804) es una estimación conservadora. <strong>Para el artículo se recomienda reportar el omega de McDonald (ω = 0,849, IC 95 % 0,817 – 0,877) como coeficiente principal</strong>, junto con el alfa como referencia, y mencionar las versiones ordinales como análisis de sensibilidad.</p>
+<p>El único punto débil es el <strong>ítem de barrera</strong>: carga menos en el factor, tiene la mayor varianza y su eliminación subiría el alfa a 0,840. No es un problema grave, porque su discriminación (0,49) supera el mínimo de 0,30, pero conviene decidir si se mantiene. A favor de mantenerlo está que es el único ítem que pregunta directamente por el inglés como obstáculo, que es central para el marco de equidad.</p>
+<p>Si se amplía el índice con “Sentía que no era capaz de aprender bien debido a mis limitaciones en inglés” (invertido) y “Me sentí cómodo/a porque entendí las temáticas”, el alfa llega a 0,865, aunque esa versión mezcla aspectos afectivos con el desempeño.</p>
+<p><strong>Referencias citadas en esta sección</strong></p>
+<ul>
+<li>Dunn, T. J., Baguley, T. y Brunsden, V. (2014). From alpha to omega: A practical solution to the pervasive problem of internal consistency estimation. <em>British Journal of Psychology, 105</em>(3), 399–412.</li>
+<li>Feldt, L. S. (1965). The approximate sampling distribution of Kuder-Richardson reliability coefficient twenty. <em>Psychometrika, 30</em>(3), 357–370.</li>
+<li>Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. <em>Structural Equation Modeling, 6</em>(1), 1–55.</li>
+<li>Nunnally, J. C. y Bernstein, I. H. (1994). <em>Psychometric theory</em> (3.ª ed.). McGraw-Hill.</li>
+<li>Zumbo, B. D., Gadermann, A. M. y Zeisser, C. (2007). Ordinal versions of coefficients alpha and theta for Likert rating scales. <em>Journal of Modern Applied Statistical Methods, 6</em>(1), 21–29.</li>
+</ul>
+</div>
 </div>
 <div id="efecto-techo" class="section level2 hasAnchor" number="3.2">
 <h2><span class="header-section-number">3.2</span> Efecto techo<a href="indice.html#efecto-techo" class="anchor-section" aria-label="Anchor link to header"></a></h2>

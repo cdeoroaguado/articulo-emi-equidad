@@ -14,16 +14,112 @@ tibble(Ítem = textos,
        Media = f(sapply(orig, function(i) mean(d[[i]]))),
        DE = f(sapply(orig, function(i) sd(d[[i]]))),
        `% de acuerdo` = pct(sapply(orig, function(i) mean(d[[i]] >= 4))),
-       `r ítem-total` = f(r_it),
-       `α sin el ítem` = f(a_sin, 3)) |>
-  tab(paste0("Ítems del índice de éxito percibido (N = ", N, ")"), align = c("l", rep("r", 5)))
+       Asimetría = f(sapply(orig, function(i) skew(d[[i]])))) |>
+  tab(paste0("Descriptivos de los ítems del índice de éxito percibido (N = ", N, ")"), align = c("l", rep("r", 4)))
 ```
 
-Media y porcentaje de acuerdo (respuestas 4 o 5) en la escala original. La correlación ítem-total y el alfa sin el ítem usan el ítem de barrera ya invertido.
+Valores en la escala original (el ítem de barrera sin invertir). % de acuerdo = respuestas 4 o 5.
 
-## Confiabilidad
+## Confiabilidad {#confiabilidad}
 
-El alfa de Cronbach del índice es **`r f(a5)`**. Si se quita el ítem de barrera, sube a `r f(a_sin["barrera_r"])`; es el ítem que menos se relaciona con los demás, probablemente por estar redactado en negativo. Si se agregan "Sentía que no era capaz de aprender bien debido a mis limitaciones en inglés" (invertido) y "Me sentí cómodo/a porque entendí las temáticas", el alfa llega a `r f(a7)`.
+```{r confiab, include=FALSE}
+source("R/alfa_cronbach.R", encoding = "UTF-8")
+ic <- function(x) paste(f(x[1], 3), "–", f(x[2], 3))
+nivel <- function(x) ifelse(x >= .90, "excelente", ifelse(x >= .80, "buena", ifelse(x >= .70, "aceptable", "insuficiente")))
+```
+
+La confiabilidad se estimó con el alfa de Cronbach y, por las razones que se explican abajo, también con el omega de McDonald y con sus versiones ordinales. Todos los cálculos están en el archivo `R/alfa_cronbach.R` del repositorio. El alfa se calculó con su fórmula y se verificó contra la función `psych::alpha`: los dos resultados coinciden.
+
+```{r}
+tibble(
+  Coeficiente = c("Alfa de Cronbach", "Alfa estandarizado", "Omega de McDonald (ω total)",
+                  "Alfa ordinal", "Omega ordinal"),
+  Base = c("Covarianzas (Pearson)", "Correlaciones (Pearson)", "Modelo de un factor (ML)",
+           "Correlaciones policóricas", "Modelo de un factor sobre correlaciones policóricas"),
+  Valor = f(c(alfa, alfa_std, omega, alfa_ord, omega_ord), 3),
+  `IC 95 %` = c(paste0(ic(ic_feldt), " (Feldt)<br>", ic(ic_boot_alfa), " (bootstrap)"), "", paste0(ic(ic_boot_omega), " (bootstrap)"), "", ""),
+  Interpretación = c(
+    paste0("Consistencia interna ", nivel(alfa), ". Supera el mínimo de 0,70 para investigación (Nunnally y Bernstein, 1994) y el límite inferior del intervalo también lo supera."),
+    paste0("Mayor que el alfa bruto (diferencia de ", f(alfa_std - alfa, 3), ") porque los ítems tienen varianzas muy distintas. Indica que no se cumple la tau-equivalencia."),
+    paste0("Confiabilidad ", nivel(omega), ". No exige que los ítems pesen igual, así que es el coeficiente más adecuado aquí y el que se recomienda reportar (Dunn et al., 2014)."),
+    paste0("Confiabilidad ", nivel(alfa_ord), ". Trata las respuestas Likert como ordinales (Zumbo et al., 2007). Es más alto porque corrige la atenuación que producen 5 categorías con efecto techo."),
+    paste0("Confiabilidad ", nivel(omega_ord), ". Combina las dos correcciones: cargas distintas y escala ordinal."))
+) |> kable(format = "html", caption = paste0("Coeficientes de confiabilidad del índice de éxito percibido (N = ", n, ", k = ", k, " ítems)"),
+           align = c("l", "l", "r", "r", "l"), escape = FALSE) |>
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |>
+  row_spec(c(1, 3), bold = TRUE) |> column_spec(5, width = "40%")
+```
+
+IC de Feldt (1965) basado en la distribución F; IC bootstrap percentil con `r f(B, 0)` remuestreos de estudiantes.
+
+### Diagnóstico por ítem
+
+```{r}
+etq_items <- c("Conceptos clave", "Barrera (invertido)", "Inglés ayudó al desempeño", "Buen desempeño", "Aprendí igual")
+interp_item <- with(diag_items, ifelse(
+  alfa_sin_item > alfa,
+  paste0("Ítem más débil. Discrimina por encima del mínimo de 0,30, pero eliminarlo subiría α a ", f(alfa_sin_item, 3), ". Tiene la mayor varianza (", f(varianza), "), probablemente por su redacción en negativo."),
+  ifelse(carga >= .70,
+         paste0("Ítem fuerte: carga alta y buena discriminación. Eliminarlo bajaría α a ", f(alfa_sin_item, 3), "."),
+         paste0("Ítem adecuado: carga aceptable y buena discriminación. Eliminarlo bajaría α a ", f(alfa_sin_item, 3), "."))))
+tibble(Ítem = etq_items,
+       Varianza = f(diag_items$varianza),
+       `Carga factorial` = f(diag_items$carga),
+       `r ítem-total corregida` = f(diag_items$r_item_total),
+       `α si se elimina` = f(diag_items$alfa_sin_item, 3),
+       Interpretación = interp_item) |>
+  kable(format = "html", caption = "Diagnóstico de los ítems del índice", align = c("l", "r", "r", "r", "r", "l")) |>
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |>
+  row_spec(which(diag_items$alfa_sin_item > alfa), bold = TRUE) |> column_spec(6, width = "40%")
+```
+
+Carga factorial: análisis factorial de un factor por máxima verosimilitud. r ítem-total corregida: correlación de cada ítem con la suma de los otros cuatro. Criterios de referencia: carga ≥ 0,40 y r ítem-total ≥ 0,30.
+
+### Supuestos y estructura
+
+```{r}
+tibble(
+  Revisión = c("Unidimensionalidad (ajuste del modelo de un factor)",
+               "Tau-equivalencia (cargas iguales)",
+               "Varianzas de los ítems",
+               "Nivel de medida"),
+  Resultado = c(paste0("χ²(", ajuste$dof, ") = ", f(ajuste$STATISTIC), ", p = ", f(ajuste$PVAL, 3),
+                       "<br>RMSEA = ", f(ajuste$RMSEA[1], 3), ", TLI = ", f(ajuste$TLI, 3)),
+                paste0("Cargas de ", f(min(cargas)), " a ", f(max(cargas))),
+                paste0("De ", f(min(var_items)), " a ", f(max(var_items))),
+                "Likert de 5 puntos, asimetría negativa"),
+  Criterio = c("p > 0,05; RMSEA ≤ 0,06; TLI ≥ 0,95 (Hu y Bentler, 1999)",
+               "Cargas similares entre ítems",
+               "Varianzas similares",
+               "Variables continuas"),
+  Interpretación = c(
+    "Se cumple. Un solo factor reproduce bien las correlaciones entre los cinco ítems, así que tiene sentido sumarlos en un índice.",
+    "No se cumple. El ítem de barrera pesa bastante menos que los demás. Por eso el alfa subestima la confiabilidad y el omega es preferible.",
+    "No se cumple. El ítem de barrera tiene casi cinco veces la varianza del ítem de conceptos, lo que explica la diferencia entre alfa bruto y estandarizado.",
+    "Se cumple parcialmente. Con 5 categorías y efecto techo, las correlaciones de Pearson se atenúan; las versiones ordinales corrigen ese sesgo.")
+) |> kable(format = "html", caption = "Revisión de los supuestos del alfa de Cronbach", align = c("l", "l", "l", "l"), escape = FALSE) |>
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |> column_spec(4, width = "40%")
+```
+
+El ajuste proviene de un análisis factorial exploratorio de un factor. Para el artículo falta un análisis factorial confirmatorio con estimador para datos ordinales (WLSMV).
+
+### Interpretación de conjunto
+
+El índice de cinco ítems es **confiable** para el propósito del estudio. Todas las estimaciones superan 0,80, y el modelo de un factor se ajusta bien a los datos, lo que respalda tratar los cinco ítems como una sola medida de éxito percibido.
+
+Como no se cumple la tau-equivalencia, el alfa de Cronbach (`r f(alfa, 3)`) es una estimación conservadora. **Para el artículo se recomienda reportar el omega de McDonald (ω = `r f(omega, 3)`, IC 95 % `r ic(ic_boot_omega)`) como coeficiente principal**, junto con el alfa como referencia, y mencionar las versiones ordinales como análisis de sensibilidad.
+
+El único punto débil es el **ítem de barrera**: carga menos en el factor, tiene la mayor varianza y su eliminación subiría el alfa a `r f(diag_items$alfa_sin_item[2], 3)`. No es un problema grave, porque su discriminación (`r f(diag_items$r_item_total[2])`) supera el mínimo de 0,30, pero conviene decidir si se mantiene. A favor de mantenerlo está que es el único ítem que pregunta directamente por el inglés como obstáculo, que es central para el marco de equidad.
+
+Si se amplía el índice con "Sentía que no era capaz de aprender bien debido a mis limitaciones en inglés" (invertido) y "Me sentí cómodo/a porque entendí las temáticas", el alfa llega a `r f(a7, 3)`, aunque esa versión mezcla aspectos afectivos con el desempeño.
+
+**Referencias citadas en esta sección**
+
+- Dunn, T. J., Baguley, T. y Brunsden, V. (2014). From alpha to omega: A practical solution to the pervasive problem of internal consistency estimation. *British Journal of Psychology, 105*(3), 399–412.
+- Feldt, L. S. (1965). The approximate sampling distribution of Kuder-Richardson reliability coefficient twenty. *Psychometrika, 30*(3), 357–370.
+- Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
+- Nunnally, J. C. y Bernstein, I. H. (1994). *Psychometric theory* (3.ª ed.). McGraw-Hill.
+- Zumbo, B. D., Gadermann, A. M. y Zeisser, C. (2007). Ordinal versions of coefficients alpha and theta for Likert rating scales. *Journal of Modern Applied Statistical Methods, 6*(1), 21–29.
 
 ## Efecto techo
 
