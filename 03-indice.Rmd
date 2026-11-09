@@ -100,13 +100,18 @@ tibble(Dimensión = "Aprendizaje disciplinar", Ítem = textos,
 ```
 
 ```{r include=FALSE}
-med_items <- sapply(orig, function(i) median(d[[i]]))
+pos4 <- c("conceptos", "buen_desemp", "ingles_desemp", "aprendi_igual")
+p_total <- sapply(pos4, function(i) mean(d[[i]] == 5))          # % "totalmente de acuerdo"
+p_des_barrera <- mean(d$barrera <= 2)                            # % en desacuerdo con "barrera"
+medias_pos <- sapply(pos4, function(i) mean(d[[i]]))
 rango_completo <- all(sapply(orig, function(i) min(d[[i]]) == 1 & max(d[[i]]) == 5))
 ```
 
 Valores en la escala original (1 = totalmente en desacuerdo; 5 = totalmente de acuerdo), con el ítem de barrera sin invertir. % de acuerdo = respuestas 4 o 5.
 
-`r if (rango_completo) "Los cinco ítems usan todo el rango de la escala (de 1 a 5), así que hubo estudiantes en ambos extremos." else "No todos los ítems usan el rango completo de la escala."` La mediana es `r f(med_items["conceptos"], 0)` en *conceptos clave*, *buen desempeño*, *inglés ayudó al desempeño* y *aprendí igual`r if (all(med_items[c("conceptos","buen_desemp","ingles_desemp","aprendi_igual")] == 5)) "*: al menos la mitad de los estudiantes marcó \"totalmente de acuerdo\"" else "*"`. En el ítem de barrera la mediana es `r f(med_items["barrera"], 0)`, en el lado del desacuerdo, que en ese ítem indica éxito. En los cuatro ítems positivos la media queda por debajo de la mediana y la asimetría es negativa; en el de barrera ocurre lo contrario (media mayor que la mediana, asimetría positiva), porque su redacción está invertida. Es el mismo efecto techo, descrito más abajo, visto desde los dos sentidos de la escala.
+`r if (rango_completo) "Los cinco ítems usan todo el rango de la escala (de 1 a 5), así que hubo estudiantes en ambos extremos." else "No todos los ítems usan el rango completo de la escala."` En *conceptos clave*, *buen desempeño*, *inglés ayudó al desempeño* y *aprendí igual*, más del 50 % de los estudiantes respondió 5, "totalmente de acuerdo" (entre el `r pct(min(p_total))` y el `r pct(max(p_total))`, según el ítem). En el ítem de barrera, más del 50 % de los estudiantes respondió en desacuerdo (el `r pct(p_des_barrera)` marcó 1 o 2), lo que en ese ítem indica éxito.
+
+Como más de la mitad de los estudiantes se concentra en el extremo favorable, las medias de los cuatro ítems positivos (entre `r f(min(medias_pos))` y `r f(max(medias_pos))`) quedan por debajo de 5, arrastradas por el grupo menor que respondió valores bajos, y la asimetría es negativa. En el ítem de barrera ocurre lo contrario (media de `r f(mean(d$barrera))` y asimetría positiva), porque su redacción está invertida. Es el mismo efecto techo, descrito más abajo, visto desde los dos sentidos de la escala.
 
 ## Confiabilidad {#confiabilidad}
 
