@@ -20,8 +20,8 @@ oleadas |> rename(`Mes de respuesta` = mes, `Respuestas de estudiantes repetidos
   tab("Respuestas de los estudiantes que respondieron más de una vez, por mes", align = c("l", "r"))
 ```
 
-<div class="decision">
-¿Conservamos la primera o la última respuesta? La primera refleja la experiencia más temprana; la última refleja más cursos EMI acumulados. Otra opción es usar a estos `r n_dup_est` estudiantes como una pequeña submuestra longitudinal.
+<div class="cuidado-ok">
+**Decisión del equipo:** trabajar con los `r N` estudiantes de la base depurada, conservando la primera respuesta de cada estudiante y excluyendo el programa de Lenguas Modernas y Cultura.
 </div>
 
 ## Otros problemas encontrados

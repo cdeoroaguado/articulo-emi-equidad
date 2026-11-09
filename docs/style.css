@@ -8,3 +8,6 @@
 .pregunta { font-style: italic; font-size: 1.25em; border-left: 3px solid #b5651d; padding-left: 1em; margin: 1.2em 0; }
 table { font-variant-numeric: tabular-nums; }
 .caption { font-style: italic; }
+.pendiente { background: #fff6db; border-left: 4px solid #d9a400; padding: .8em 1em; margin: 1em 0; }
+.falta { background: #fff1b8; color: #6b4e00; padding: 0 .25em; border-radius: 2px; font-style: italic; }
+.cuidado-ok { background: #e8f4ec; border-left: 4px solid #2e7d4f; padding: .8em 1em; margin: 1em 0; }

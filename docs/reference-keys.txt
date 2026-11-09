@@ -1,4 +1,6 @@
 tab:unnamed-chunk-1
+tab:met-dim
+tab:met-vars
 tab:unnamed-chunk-2
 tab:unnamed-chunk-3
 tab:unnamed-chunk-4
@@ -30,6 +32,15 @@ tab:unnamed-chunk-27
 tab:unnamed-chunk-28
 tab:unnamed-chunk-29
 propuesta
+metodologia
+diseño
+contexto-y-participantes
+instrumento
+procedimiento-de-recolección
+depuración-de-los-datos
+variables
+análisis-de-datos
+consideraciones-éticas
 base
 estudiantes-que-respondieron-más-de-una-vez
 otros-problemas-encontrados

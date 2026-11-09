@@ -2,8 +2,8 @@
 
 ## Lo que necesitamos decidir juntos
 
-1. **Respuestas repetidas.** ¿Primera respuesta, última respuesta, o una submuestra longitudinal con los `r n_dup_est` estudiantes?
-2. **Lenguas Modernas y Cultura.** ¿Excluimos a estos `r n_lmc` estudiantes porque su programa no es EMI disciplinar en el mismo sentido?
+1. ~~**Respuestas repetidas.**~~ *Decidido:* se conserva la primera respuesta de cada estudiante.
+2. ~~**Lenguas Modernas y Cultura.**~~ *Decidido:* se excluyen; la muestra analítica es de `r N` estudiantes.
 3. **Variable dependiente.** ¿Índice de 5 ítems, versión de 4 sin el ítem de barrera, o versión de 7?
 4. **Controles.** ¿Incluimos programa, género y semestre? El programa pesa más que cualquier variable demográfica.
 5. **Ítem duplicado.** ¿Cómo reportamos que "Me resultó fácil expresar mis ideas…" aparece dos veces en el instrumento?

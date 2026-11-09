@@ -1,0 +1,117 @@
+# Metodología {#metodologia}
+
+```{r met-setup, include=FALSE}
+source("R/dimensiones.R", encoding = "UTF-8")
+ver <- function(p) as.character(packageVersion(p))
+fecha_es <- function(x) {
+  meses <- c("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+             "septiembre", "octubre", "noviembre", "diciembre")
+  paste(meses[as.integer(format(x, "%m"))], "de", format(x, "%Y"))
+}
+f_ini <- min(d$inicio); f_fin <- max(d$inicio)
+n_sem <- table(d$semestre)
+edad_m <- mean(d$edad, na.rm = TRUE); edad_de <- sd(d$edad, na.rm = TRUE)
+```
+
+<div class="pendiente">
+Los textos entre corchetes y resaltados como este <span class="falta">[PENDIENTE: …]</span> son datos que no están en la base y que el equipo debe completar o confirmar antes de enviar el artículo.
+</div>
+
+## Diseño
+
+Se realizó un estudio **cuantitativo, no experimental, de corte transversal y alcance correlacional-explicativo**. El propósito fue examinar cómo se relacionan las características demográficas asociadas a la equidad y el acceso (tipo de colegio, colegio bilingüe, estrato socioeconómico y nivel educativo de los padres) con la autopercepción del éxito académico en asignaturas disciplinares dictadas en inglés (*English-Medium Instruction*, EMI), y si el nivel de inglés autopercibido actúa como mediador de esa relación.
+
+## Contexto y participantes
+
+El estudio se desarrolló en <span class="falta">[PENDIENTE: confirmar nombre de la institución, p. ej., Universidad del Norte, Barranquilla, Colombia]</span>, una universidad privada que ofrece asignaturas disciplinares en inglés dentro de sus programas de pregrado. La población la conformaron los estudiantes de los programas de **Administración de Empresas, Negocios Internacionales y Contaduría Pública** <span class="falta">[PENDIENTE: confirmar la unidad académica, p. ej., Escuela de Negocios]</span> que habían cursado al menos una asignatura de su carrera en inglés.
+
+El muestreo fue **no probabilístico** <span class="falta">[PENDIENTE: precisar si fue por conveniencia o intencional, y cómo se invitó a los estudiantes]</span>. Se recibieron `r n_raw` respuestas. Tras el proceso de depuración descrito más adelante, la muestra analítica quedó conformada por **`r N` estudiantes**: `r sum(d$programa == "Administración de Empresas")` de Administración de Empresas (`r pct(mean(d$programa == "Administración de Empresas"), 1)`), `r sum(d$programa == "Negocios Internacionales")` de Negocios Internacionales (`r pct(mean(d$programa == "Negocios Internacionales"), 1)`) y `r sum(d$programa == "Contaduría Pública")` de Contaduría Pública (`r pct(mean(d$programa == "Contaduría Pública"), 1)`). El `r pct(mean(d$genero == "Femenino"), 1)` se identificó con el género femenino; la edad media fue de `r f(edad_m, 1)` años (DE = `r f(edad_de, 1)`), y el `r pct(mean(d$semestre >= 7), 1)` cursaba entre séptimo y décimo semestre. El perfil sociodemográfico completo se presenta en el capítulo \@ref(muestra).
+
+## Instrumento
+
+Se aplicó un cuestionario autoadministrado en línea titulado *Uso del inglés como medio de instrucción en instituciones de educación superior* <span class="falta">[PENDIENTE: indicar si fue diseñado por el equipo, adaptado de otro instrumento (citar) y si pasó por validación de contenido con jueces expertos o prueba piloto]</span>. El cuestionario tiene tres partes:
+
+1. **Datos sociodemográficos y académicos:** programa, semestre, tipo de colegio, si el colegio de bachillerato era bilingüe, género, año de nacimiento, nivel máximo de escolaridad de la madre y del padre, y estrato socioeconómico.
+2. **Perfil lingüístico en inglés:** autoevaluación del nivel general de inglés y de las habilidades de habla, escucha, lectura y escritura, en una escala de cinco opciones (de *muy malo* a *excelente*).
+3. **Experiencia en asignaturas dictadas en inglés:** `r nrow(dim_tab)` ítems tipo Likert de cinco puntos (1 = totalmente en desacuerdo; 5 = totalmente de acuerdo), organizados en cinco dimensiones:
+
+```{r met-dim}
+dim_res <- dim_tab |>
+  mutate(dimension = factor(dimension, c("Dominio del inglés", "Aprendizaje disciplinar", "Pedagogía y recursos", "Motivación y actitudes", "Proyección futura"))) |>
+  count(Dimensión = dimension, name = "Ítems")
+dim_res$`Qué indaga` <- c(
+  "Comprensión de explicaciones y textos, expresión y participación oral en inglés",
+  "Comprensión de los contenidos, desempeño y aprendizaje en las asignaturas",
+  "Nivel de inglés de los docentes, materiales, evaluaciones, actividades y recursos de apoyo",
+  "Esfuerzo adicional, comodidad y cansancio mental",
+  "Utilidad futura percibida e intención de continuar o recomendar cursos en inglés")
+tab(dim_res, "Dimensiones del instrumento", align = c("l", "r", "l"))
+```
+
+Además, el cuestionario incluye tres preguntas de selección múltiple (habilidades en las que el estudiante mejoró, estrategias ante las dificultades y emociones experimentadas en clase) y seis preguntas abiertas sobre beneficios, dificultades, recomendaciones, influencia del inglés en el aprendizaje y estrategias docentes, que no se analizan en este artículo. La correspondencia completa entre ítems y dimensiones se presenta en la sección \@ref(dimensiones).
+
+## Procedimiento de recolección
+
+El cuestionario se administró mediante un formulario en línea <span class="falta">[PENDIENTE: confirmar plataforma, p. ej., Microsoft Forms]</span> en tres periodos académicos: septiembre a noviembre de 2025, enero y febrero de 2026, y julio y agosto de 2026. Las respuestas de la muestra analítica se recogieron entre `r fecha_es(f_ini)` y `r fecha_es(f_fin)`. Antes de responder, cada estudiante leyó un consentimiento informado que describía el propósito del estudio, el carácter voluntario y confidencial de la participación y el uso exclusivamente académico de los datos; solo continuaron quienes lo aceptaron.
+
+## Depuración de los datos
+
+La base original contenía `r n_raw` respuestas. Se aplicaron, en este orden, los siguientes criterios de exclusión:
+
+1. **Ausencia de consentimiento informado** (`r n_no_consent` respuestas).
+2. **Respuestas repetidas.** Como el cuestionario se aplicó en tres periodos, `r n_dup_est` estudiantes lo respondieron más de una vez; se identificaron por su correo institucional y se conservó su primera respuesta, para mantener la independencia de las observaciones (`r n_dup_quit` respuestas excluidas).
+3. **Programa fuera del alcance del estudio.** Se excluyeron `r n_lmc` estudiantes de Lenguas Modernas y Cultura, porque en ese programa el inglés es objeto de estudio y no solo medio de instrucción.
+
+La muestra analítica final fue de **`r N` estudiantes**, sin datos faltantes en las variables del estudio. El detalle de cada paso y de las respuestas excluidas se presenta en el capítulo \@ref(base).
+
+## Variables
+
+```{r met-vars}
+tibble(
+  Rol = c("Dependiente", "Independiente", "Independiente", "Independiente", "Independiente", "Mediadora",
+          "Control", "Control", "Control"),
+  Variable = c("Autopercepción del éxito en EMI", "Tipo de colegio", "Colegio bilingüe", "Estrato socioeconómico",
+               "Nivel educativo de los padres", "Nivel de inglés autopercibido", "Programa", "Género", "Semestre"),
+  Operacionalización = c(
+    "Índice: promedio de 5 ítems de la dimensión Aprendizaje disciplinar (el ítem de barrera, invertido). Rango 1–5",
+    "1 = público; 0 = privado",
+    "1 = sí; 0 = no",
+    "Ordinal, 1 a 6",
+    "Nivel más alto entre madre y padre: 1 primaria, 2 bachillerato, 3 técnico/tecnólogo, 4 pregrado, 5 posgrado",
+    "\"Mi nivel de inglés es\": 1 malo, 2 regular, 3 bueno, 4 excelente (nadie eligió \"muy malo\")",
+    "Administración de Empresas (referencia), Negocios Internacionales, Contaduría Pública",
+    "Femenino (referencia), masculino",
+    "Semestre que cursa")
+) |> tab("Variables del estudio y su operacionalización", align = c("l", "l", "l"))
+```
+
+**Variable dependiente.** La autopercepción del éxito en EMI se midió con un índice construido a partir de cinco ítems de la dimensión Aprendizaje disciplinar: comprensión de los conceptos clave, el inglés como barrera para demostrar el conocimiento (invertido), contribución del nivel de inglés al desempeño, logro de un buen desempeño y aprendizaje equivalente al de los cursos en español. Se excluyeron dos ítems de esa dimensión: el de conocimiento previo de la materia, porque mide un antecedente y no un resultado, y el de facilidad para expresar ideas en inglés, porque repite un ítem de la dimensión Dominio del inglés. El índice es el promedio de los cinco ítems.
+
+## Análisis de datos
+
+Todos los análisis se realizaron en R `r paste(R.version$major, R.version$minor, sep = ".")` (R Core Team, 2026). El nivel de significancia fue de 0,05 en todas las pruebas. El análisis siguió cuatro etapas.
+
+**1. Análisis descriptivo.** Se calcularon frecuencias y porcentajes para las variables categóricas, y media, desviación estándar, mediana, mínimo, máximo y asimetría para los ítems y el índice.
+
+**2. Propiedades psicométricas del índice.** La estructura unidimensional se evaluó mediante un análisis factorial confirmatorio (AFC) de un factor con los cinco ítems tratados como ordinales, estimado con mínimos cuadrados ponderados con media y varianza ajustadas (WLSMV) sobre correlaciones policóricas, con el paquete `lavaan` `r ver("lavaan")` (Rosseel, 2012). En los ítems con categorías de respuesta con menos de 10 casos se unieron las dos categorías de desacuerdo; el modelo con las cinco categorías originales se estimó como análisis de sensibilidad. El ajuste se evaluó con el χ² escalado, el CFI y el TLI robustos (≥ 0,95), el RMSEA robusto (≤ 0,06) y el SRMR (≤ 0,08) (Hu y Bentler, 1999). La validez convergente se valoró con la varianza media extraída (AVE ≥ 0,50; Fornell y Larcker, 1981). La confiabilidad se estimó con el omega categórico (Green y Yang, 2009), calculado con `semTools` `r ver("semTools")`, y como referencia con el alfa de Cronbach (intervalos de Feldt y bootstrap), el omega de McDonald y el alfa ordinal (Zumbo et al., 2007), con el paquete `psych` `r ver("psych")`.
+
+**3. Comparaciones entre grupos.** Dado que el índice presentó asimetría negativa y efecto techo, las diferencias entre grupos se evaluaron con pruebas no paramétricas: U de Mann-Whitney para variables de dos grupos, con la correlación biserial por rangos como tamaño del efecto, y H de Kruskal-Wallis para variables de más de dos grupos, con épsilon cuadrado (ε²). Cuando el Kruskal-Wallis fue significativo, se realizaron comparaciones por pares con la prueba de Dunn (1964) y ajuste de Holm (1979), con r = |z| / √N como tamaño del efecto.
+
+**4. Modelos explicativos.** Se estimaron tres modelos de regresión lineal por mínimos cuadrados ordinarios con errores estándar robustos a la heterocedasticidad (HC3; paquete `sandwich` `r ver("sandwich")`): el modelo 1 incluyó las cuatro variables demográficas; el modelo 2 añadió programa, género y semestre como controles, y el modelo 3 añadió el nivel de inglés autopercibido. La multicolinealidad se revisó con el factor de inflación de la varianza (VIF). Por el efecto techo, el modelo 1 se reestimó como regresión logística ordinal (paquete `MASS` `r ver("MASS")`) con el índice agrupado en tres niveles (bajo ≤ 3,6; medio; alto > 4,6). Por último, se estimó el efecto indirecto del colegio bilingüe sobre el éxito percibido a través del nivel de inglés como el producto de los coeficientes *a* × *b*, con un intervalo de confianza bootstrap percentil de 2.000 remuestreos (paquete `boot` `r ver("boot")`). Se excluyó de los modelos a la única persona que se identificó con el género "otro".
+
+**Reproducibilidad.** Todo el procesamiento, desde la lectura de la base hasta las tablas y figuras, está programado en R y R Markdown (`bookdown` `r ver("bookdown")`), y las cifras del texto se calculan directamente a partir de los datos. El código está disponible en el repositorio del proyecto; la base de datos no se publica para proteger la identidad de los participantes.
+
+## Consideraciones éticas
+
+La participación fue voluntaria y estuvo precedida por un consentimiento informado. Los datos se analizaron de forma agregada, y la base con información identificable (nombres, correos y códigos de estudiante) se conserva solo en poder del equipo investigador. <span class="falta">[PENDIENTE: indicar si el proyecto fue aprobado por un comité de ética, con el número o fecha del acta]</span>
+
+**Referencias de la metodología**
+
+- Dunn, O. J. (1964). Multiple comparisons using rank sums. *Technometrics, 6*(3), 241–252.
+- Fornell, C. y Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. *Journal of Marketing Research, 18*(1), 39–50.
+- Green, S. B. y Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. *Psychometrika, 74*(1), 155–167.
+- Holm, S. (1979). A simple sequentially rejective multiple test procedure. *Scandinavian Journal of Statistics, 6*(2), 65–70.
+- Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
+- R Core Team. (2026). *R: A language and environment for statistical computing*. R Foundation for Statistical Computing.
+- Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. *Journal of Statistical Software, 48*(2), 1–36.
+- Zumbo, B. D., Gadermann, A. M. y Zeisser, C. (2007). Ordinal versions of coefficients alpha and theta for Likert rating scales. *Journal of Modern Applied Statistical Methods, 6*(1), 21–29.
