@@ -1,0 +1,52 @@
+# Comparación por grupos {#grupos}
+
+Miradas por separado, las cuatro variables demográficas se asocian con el éxito percibido, y siempre en la misma dirección: los grupos con más recursos perciben más éxito.
+
+```{r medias, fig.cap="Media del índice de éxito percibido por grupo, con intervalo de confianza del 95 %. La línea vertical es la media general.", fig.height=4.4}
+g <- function(v, etiqueta, niveles) d |> group_by(x = .data[[v]]) |>
+  summarise(m = mean(EXITO), se = sd(EXITO) / sqrt(n()), n = n()) |>
+  mutate(var = etiqueta, x = niveles[as.character(x)])
+gd <- bind_rows(
+  g("bilingue", "Colegio bilingüe", c("0" = "No", "1" = "Sí")),
+  g("publico", "Tipo de colegio", c("1" = "Público", "0" = "Privado")),
+  g("estr_g", "Estrato", c("1–2" = "1–2", "3–4" = "3–4", "5–6" = "5–6")),
+  g("padres_univ", "Padres universitarios", c("0" = "No", "1" = "Sí"))
+) |> mutate(var = factor(var, c("Colegio bilingüe", "Tipo de colegio", "Estrato", "Padres universitarios")))
+ggplot(gd, aes(m, x)) +
+  geom_vline(xintercept = mean(d$EXITO), colour = ocre, linetype = 2) +
+  geom_errorbarh(aes(xmin = m - 1.96 * se, xmax = m + 1.96 * se), height = 0, colour = "grey60", linewidth = 0.8) +
+  geom_point(size = 3, colour = azul) +
+  geom_text(aes(label = f(m)), vjust = -1, size = 3.3) +
+  facet_grid(var ~ ., scales = "free_y", space = "free_y", switch = "y") +
+  scale_x_continuous(labels = function(x) f(x, 1)) +
+  labs(x = "Índice de éxito percibido (1–5)", y = NULL) + tema +
+  theme(strip.placement = "outside", strip.text.y.left = element_text(angle = 0, face = "bold", hjust = 1),
+        panel.grid.major.x = element_line(colour = "grey92"))
+```
+
+```{r}
+fila <- function(var, grupos, medias, acuerdo, prueba, p, ef) tibble(Variable = var, Grupos = grupos, Medias = medias,
+  `% con índice ≥ 4` = acuerdo, Prueba = prueba, p = fp(p), `Tamaño del efecto` = ef)
+et <- estr_tab
+bind_rows(
+  fila("Colegio bilingüe", "No / Sí", paste(f(t_bil$m0), "/", f(t_bil$m1)), paste(pct(t_bil$a0), "/", pct(t_bil$a1)),
+       "Mann-Whitney", t_bil$p, paste("r =", f(t_bil$r))),
+  fila("Padres universitarios", "No / Sí", paste(f(t_pad$m0), "/", f(t_pad$m1)), paste(pct(t_pad$a0), "/", pct(t_pad$a1)),
+       "Mann-Whitney", t_pad$p, paste("r =", f(t_pad$r))),
+  fila("Tipo de colegio", "Público / Privado", paste(f(t_pub$m1), "/", f(t_pub$m0)), paste(pct(t_pub$a1), "/", pct(t_pub$a0)),
+       "Mann-Whitney", t_pub$p, paste("r =", f(t_pub$r))),
+  fila("Estrato", "1–2 / 3–4 / 5–6", paste(f(et$m), collapse = " / "), paste(pct(et$a), collapse = " / "),
+       "Kruskal-Wallis (6 niveles)", k_estr$p, paste("ε² =", f(k_estr$eps2, 3))),
+  fila("Educación de los padres", "5 niveles", paste(f(edu_rng[1]), "a", f(edu_rng[2])), "",
+       "Kruskal-Wallis", k_edu$p, paste("ε² =", f(k_edu$eps2, 3))),
+  fila("Programa (control)", "AE / NI / CP", paste(f(prog_tab$m), collapse = " / "), "",
+       "Kruskal-Wallis", k_prog$p, paste("ε² =", f(k_prog$eps2, 3))),
+  fila("Género (control)", "F / M", paste(f(gen_tab$m[1:2]), collapse = " / "), "",
+       "Kruskal-Wallis", k_gen$p, paste("ε² =", f(k_gen$eps2, 3)))
+) |> tab("Diferencias en el índice de éxito percibido", align = c("l", "l", "r", "r", "l", "r", "r")) |>
+  row_spec(1, bold = TRUE)
+```
+
+*r* = correlación biserial por rangos (positiva cuando el grupo con más recursos puntúa más alto). AE = Administración de Empresas, NI = Negocios Internacionales, CP = Contaduría Pública.
+
+El colegio bilingüe tiene el efecto más grande de las cuatro variables demográficas. El programa tiene un efecto todavía mayor (ε² = `r f(k_prog$eps2, 3)`), así que debe controlarse en cualquier modelo.

@@ -1,0 +1,21 @@
+book_filename: "equidad-emi"
+output_dir: docs
+delete_merged_file: true
+new_session: false
+language:
+  label:
+    fig: "Figura "
+    tab: "Tabla "
+  ui:
+    chapter_name: "Capítulo "
+rmd_files:
+  - index.Rmd
+  - 01-propuesta.Rmd
+  - 02-base.Rmd
+  - 03-indice.Rmd
+  - 04-muestra.Rmd
+  - 05-grupos.Rmd
+  - 06-modelos.Rmd
+  - 07-ruta.Rmd
+  - 08-decisiones.Rmd
+  - 09-pasos.Rmd

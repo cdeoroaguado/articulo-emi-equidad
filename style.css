@@ -1,0 +1,10 @@
+.book .book-body .page-wrapper .page-inner section.normal { font-size: 1.05em; }
+.book .book-body .page-wrapper .page-inner section.normal h1 { color: #1f4e79; }
+.book .book-body .page-wrapper .page-inner section.normal h2 { color: #1f4e79; border-bottom: 1px solid #dfe1e6; padding-bottom: .2em; }
+.decision { background: #f6ece2; border-left: 4px solid #b5651d; padding: .8em 1em; margin: 1em 0; }
+.decision::before { content: "Por decidir"; display: block; font-weight: 700; color: #b5651d; text-transform: uppercase; font-size: .8em; letter-spacing: .08em; margin-bottom: .3em; }
+.cuidado { background: #e7eef6; border-left: 4px solid #1f4e79; padding: .8em 1em; margin: 1em 0; }
+.cuidado::before { content: "Cuidado con la interpretación"; display: block; font-weight: 700; color: #1f4e79; text-transform: uppercase; font-size: .8em; letter-spacing: .08em; margin-bottom: .3em; }
+.pregunta { font-style: italic; font-size: 1.25em; border-left: 3px solid #b5651d; padding-left: 1em; margin: 1.2em 0; }
+table { font-variant-numeric: tabular-nums; }
+.caption { font-style: italic; }

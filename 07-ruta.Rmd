@@ -1,0 +1,42 @@
+# Una ruta posible de la desigualdad {#ruta}
+
+```{r}
+c_tot <- coef(m1)["bilingue"]; c_dir <- coef(m3)["bilingue"]
+a_cf <- coef(ma)["bilingue"]; b_cf <- coef(m3)["nivel_ing"]
+```
+
+Al agregar el nivel de inglés autopercibido (modelo M3), el efecto del colegio bilingüe cae de `r f(c_tot)` a `r f(c_dir)`, y el R² sube de `r f(summary(m1)$r.squared)` a `r f(summary(m3)$r.squared)`. Eso sugiere una mediación parcial: parte de la ventaja del colegio bilingüe se explica porque esos estudiantes llegan a la universidad con mejor inglés.
+
+```{r ruta, fig.cap="Ruta propuesta entre origen social y éxito percibido en EMI. Coeficientes no estandarizados, controlando tipo de colegio, estrato y educación de los padres.", fig.height=2.6, fig.width=8}
+nodos <- tibble(x0 = c(0, 3.3, 5.3, 7.6), x1 = c(2.6, 4.5, 7.0, 9.3), y0 = 0.72, y1 = 1.28,
+                lab = c("Origen: estrato,\neducación de los padres,\ntipo de colegio", "Colegio\nbilingüe",
+                        "Nivel de inglés\nautopercibido", "Éxito percibido\nen EMI"))
+ggplot() +
+  geom_rect(data = nodos, aes(xmin = x0, xmax = x1, ymin = y0, ymax = y1), fill = "white", colour = "grey20", linewidth = 0.5) +
+  geom_text(data = nodos, aes((x0 + x1) / 2, 1, label = lab), size = 3.3, lineheight = 0.95, colour = "grey15") +
+  geom_segment(aes(x = c(2.65, 4.55, 7.05), xend = c(3.25, 5.25, 7.55), y = 1, yend = 1),
+               arrow = arrow(length = unit(0.22, "cm"), type = "closed"), colour = azul, linewidth = 0.8) +
+  annotate("text", x = c(2.95, 4.9, 7.3), y = 1.42, size = 3.5,
+           label = c("acceso", paste("a =", f(a_cf)), paste("b =", f(b_cf)))) +
+  geom_curve(aes(x = 3.9, xend = 8.45, y = 0.68, yend = 0.68), curvature = 0.22, colour = "grey55",
+             arrow = arrow(length = unit(0.2, "cm"), type = "closed"), linetype = 2) +
+  annotate("text", x = 6.15, y = 0.2, size = 3.3, colour = "grey30", label = paste("efecto directo c' =", f(c_dir))) +
+  coord_cartesian(xlim = c(-0.1, 9.4), ylim = c(0.1, 1.55)) + theme_void()
+```
+
+```{r}
+ci_t <- ci_rob(m1, "bilingue"); ci_d <- ci_rob(m3, "bilingue")
+tibble(Efecto = c("Total (c)", "Directo (c')", "Indirecto vía nivel de inglés (a × b)"),
+       Estimado = f(c(c_tot, c_dir, bt$t0)),
+       `IC 95 %` = c(paste(f(ci_t[1]), "a", f(ci_t[2])), paste(f(ci_d[1]), "a", f(ci_d[2])),
+                     paste(f(ind_ci[1]), "a", f(ind_ci[2])))) |>
+  tab("Descomposición del efecto del colegio bilingüe", align = c("l", "r", "r")) |> row_spec(3, bold = TRUE)
+```
+
+Intervalo del efecto indirecto por bootstrap percentil con `r f(bt$R, 0)` remuestreos; intervalos de los efectos total y directo con errores HC3.
+
+Este planteamiento encaja bien con el marco de equidad y acceso. La posición socioeconómica abre o cierra el acceso a colegios bilingües, ese acceso se traduce en dominio del inglés, y el dominio del inglés se traduce en sentirse capaz de tener éxito en EMI. En el artículo se puede probar formalmente con un modelo de rutas o un SEM, con el índice de éxito como variable latente.
+
+<div class="cuidado">
+Son datos transversales y autorreportados. El nivel de inglés y el éxito se miden con la misma encuesta y en el mismo momento, lo que infla su correlación (varianza de método común). Hay que hablar de asociaciones y de una ruta coherente con los datos, no de causas.
+</div>

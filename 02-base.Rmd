@@ -1,0 +1,32 @@
+# Estado de la base de datos {#base}
+
+El archivo recibido tiene `r n_raw` filas y `r n_cols` columnas. De ellas, `r n_vacias` están completamente vacías (son columnas de "Puntos" y "Comentarios" del formulario). La depuración preliminar siguió estos pasos:
+
+```{r}
+tibble(
+  Paso = c("Respuestas en el archivo", "No dieron consentimiento informado",
+           "Respuestas repetidas del mismo estudiante (se conservó la primera)",
+           "Estudiantes de Lenguas Modernas y Cultura", "Estudiantes en el análisis"),
+  n = c(n_raw, -n_no_consent, -n_dup_quit, -n_lmc, N)
+) |> tab("Depuración de la base", align = c("l", "r")) |> row_spec(5, bold = TRUE)
+```
+
+## Estudiantes que respondieron más de una vez
+
+`r n_dup_est` correos aparecen más de una vez. Las fechas muestran que la encuesta se aplicó en tres oleadas (septiembre a noviembre de 2025, enero y febrero de 2026, y julio y agosto de 2026), y algunos estudiantes la respondieron en más de una. Sus respuestas cambian entre oleadas, así que no son envíos dobles por error. Para este informe se conservó la primera respuesta de cada estudiante.
+
+```{r}
+oleadas |> rename(`Mes de respuesta` = mes, `Respuestas de estudiantes repetidos` = n) |>
+  tab("Respuestas de los estudiantes que respondieron más de una vez, por mes", align = c("l", "r"))
+```
+
+<div class="decision">
+¿Conservamos la primera o la última respuesta? La primera refleja la experiencia más temprana; la última refleja más cursos EMI acumulados. Otra opción es usar a estos `r n_dup_est` estudiantes como una pequeña submuestra longitudinal.
+</div>
+
+## Otros problemas encontrados
+
+- **Año de nacimiento mal digitado** en `r n_nacim_mal` casos (por ejemplo "200" o "24042003"). No afecta este análisis porque la edad no se usa en los modelos.
+- **Un ítem aparece dos veces** en el instrumento: *"`r nombre_expresar`"*, en el bloque de dominio del inglés y en el de aprendizaje disciplinar. Hay que reportarlo o usar solo una de las dos.
+- **`r n_pub_bil` estudiantes dicen venir de un colegio público bilingüe.** Es posible, pero conviene confirmar que entendieron la pregunta.
+- **`r n_sem_raro` estudiante de semestre 5** en una muestra de 7.º a 10.º semestre, y **una persona de género "Otro"**, que no entra en los modelos que controlan por género.

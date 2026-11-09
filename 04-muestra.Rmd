@@ -1,0 +1,42 @@
+# Perfil de la muestra {#muestra}
+
+Son `r N` estudiantes de 7.º a 10.º semestre de tres programas de la Escuela de Negocios, con edad media de `r f(mean(d$edad, na.rm = TRUE), 1)` años. La muestra está inclinada hacia los grupos con más recursos: el `r pct(mean(d$publico == 0))` viene de colegio privado y solo el `r pct(mean(d$estrato <= 2))` es de estrato 1 o 2.
+
+```{r}
+perfil <- function(etiqueta, x) tibble(Variable = etiqueta, Categoría = names(x), n = as.integer(x),
+                                       `%` = f(100 * as.numeric(x) / N, 1))
+bind_rows(
+  perfil("Programa", table(d$programa)),
+  perfil("Tipo de colegio", table(d$colegio)),
+  perfil("Colegio bilingüe", table(d$bil_txt)),
+  perfil("Estrato", table(d$estr_g)),
+  perfil("Padres con educación universitaria", table(factor(d$padres_univ, 0:1, c("Ninguno", "Al menos uno")))),
+  perfil("Género", table(d$genero))
+) |> mutate(Variable = ifelse(duplicated(Variable), "", Variable)) |>
+  tab(paste0("Características de los participantes (N = ", N, ")"), align = c("l", "l", "r", "r"))
+```
+
+## Las variables demográficas van juntas
+
+El `r pct(mean(d$bilingue[d$publico == 1] == 0))` de los estudiantes de colegio público estudió en un colegio no bilingüe, frente al `r pct(mean(d$bilingue[d$publico == 0] == 0))` de los de colegio privado. El acceso al bilingüismo escolar sigue el estrato con claridad:
+
+```{r bilestrato, fig.cap="Porcentaje de estudiantes que estudiaron en colegio bilingüe, por estrato.", fig.height=3.4}
+d |> group_by(estrato) |> summarise(p = mean(bilingue), n = n()) |>
+  ggplot(aes(factor(estrato), p)) +
+  geom_col(fill = azul, width = 0.6) +
+  geom_text(aes(label = paste0(round(100 * p), " %")), vjust = -0.5, size = 3.6) +
+  scale_y_continuous(labels = function(x) paste0(100 * x, " %"), limits = c(0, 1), expand = c(0, 0)) +
+  labs(x = "Estrato", y = NULL) + tema + theme(panel.grid.major.y = element_line(colour = "grey90"))
+```
+
+```{r}
+cm <- cor(d[c("publico", "bilingue", "estrato", "edu_max", "nivel_ing", "EXITO")], method = "spearman")
+dem <- abs(cm[1:4, 1:4][lower.tri(cm[1:4, 1:4])])
+etq <- c("Colegio público", "Colegio bilingüe", "Estrato", "Educación padres", "Nivel de inglés", "Éxito percibido")
+cm2 <- cm; cm2[upper.tri(cm2, diag = TRUE)] <- NA
+out <- as.data.frame(ifelse(is.na(cm2), "", f(cm2)))
+names(out) <- etq; out <- cbind(` ` = etq, out)
+tab(out[-1, -7], "Correlaciones de Spearman entre predictores y resultado", align = c("l", rep("r", 5)))
+```
+
+Las correlaciones entre las cuatro variables demográficas van de `r f(min(dem))` a `r f(max(dem))` en valor absoluto. Esto importa para la interpretación: no son cuatro factores independientes, sino distintas caras de una misma posición social.

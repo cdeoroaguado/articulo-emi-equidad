@@ -1,0 +1,16 @@
+# Decisiones pendientes y riesgos {#decisiones}
+
+## Lo que necesitamos decidir juntos
+
+1. **Respuestas repetidas.** ¿Primera respuesta, última respuesta, o una submuestra longitudinal con los `r n_dup_est` estudiantes?
+2. **Lenguas Modernas y Cultura.** ¿Excluimos a estos `r n_lmc` estudiantes porque su programa no es EMI disciplinar en el mismo sentido?
+3. **Variable dependiente.** ¿Índice de 5 ítems, versión de 4 sin el ítem de barrera, o versión de 7?
+4. **Controles.** ¿Incluimos programa, género y semestre? El programa pesa más que cualquier variable demográfica.
+5. **Ítem duplicado.** ¿Cómo reportamos que "Me resultó fácil expresar mis ideas…" aparece dos veces en el instrumento?
+
+## Riesgos que los revisores van a señalar
+
+- **Sesgo de supervivencia.** Todos los participantes están en semestres avanzados de una universidad privada; es decir, ya superaron EMI. Los estudiantes a quienes EMI afectó más pudieron haber desertado o cambiado de programa. En un artículo sobre equidad y acceso conviene discutirlo de frente.
+- **Pocos casos en los grupos de interés.** `r sum(d$estrato <= 2)` estudiantes de estrato 1–2 y `r sum(d$publico)` de colegio público. Es suficiente para comparaciones agrupadas, pero no para cruzar varias variables a la vez.
+- **Éxito autopercibido sin medida objetiva.** No hay notas. Si el consentimiento informado lo permite, valdría la pena explorar si se puede vincular el promedio académico mediante el código de estudiante.
+- **Efecto techo.** La mayoría percibe mucho éxito, así que hay poca variación en la parte baja de la escala.

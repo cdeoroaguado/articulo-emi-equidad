@@ -1,0 +1,31 @@
+# Próximos pasos {#pasos}
+
+```{r}
+tibble(Fecha = c("Semana del 9 de noviembre", "Hasta el 15 de noviembre", "Hasta el 22 de noviembre", "Desde el 22 de noviembre"),
+       Tarea = c("Responder las decisiones del capítulo 8",
+                 "Base depurada, tablas descriptivas, análisis factorial confirmatorio del índice y modelo de rutas",
+                 "Marco conceptual de equidad y acceso en EMI; revisión de literatura",
+                 "Inicio de la escritura del artículo"),
+       Responsable = c("Todo el equipo", "Carlos", "Kathleen, Lurdes y Jair", "Todo el equipo")) |>
+  tab("Plan de trabajo propuesto")
+```
+
+## Qué sugiere este análisis para el artículo
+
+El hallazgo más interesante no es que "los estudiantes de estrato alto perciben más éxito", sino que **el colegio bilingüe concentra el efecto de las demás variables demográficas**, y que buena parte de ese efecto pasa por el inglés con que se llega a la universidad. Eso permite discutir EMI como una política que puede reproducir desigualdades de origen si la universidad no ofrece apoyos lingüísticos a quienes no tuvieron acceso a educación bilingüe.
+
+Un dato complementario de la misma encuesta: el `r pct(mean(d$recursos <= 2))` de los estudiantes está en desacuerdo con haber usado los recursos de apoyo de la universidad (como el centro de escritura). Valdría la pena ver si ese uso difiere por origen, para la sección de discusión e implicaciones.
+
+```{r}
+d |> group_by(`Colegio bilingüe` = ifelse(bilingue == 1, "Sí", "No")) |>
+  summarise(n = n(), `No usó los recursos de apoyo` = pct(mean(recursos <= 2)), `Sí los usó` = pct(mean(recursos >= 4))) |>
+  tab("Uso de los recursos de apoyo de la universidad según colegio bilingüe (exploratorio)", align = c("l", "r", "r", "r"))
+```
+
+## Reproducir este libro {-}
+
+1. Coloque el Excel de la encuesta en la carpeta superior a `libro_emi/` (no se incluye en el repositorio por contener datos personales).
+2. Abra `libro_emi.Rproj` en RStudio.
+3. En la pestaña *Build*, pulse *Build Book*, o ejecute `bookdown::render_book("index.Rmd")`.
+
+El libro se genera en la carpeta `docs/`, que es la que publica GitHub Pages.

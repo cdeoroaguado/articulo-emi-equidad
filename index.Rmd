@@ -1,0 +1,42 @@
+---
+title: "Equidad, acceso y autopercepción del éxito en cursos dictados en inglés"
+subtitle: "Informe preliminar de análisis de la encuesta EMI"
+author: "Kathleen, Lurdes, Jair y Carlos de Oro"
+date: "8 de noviembre de 2026"
+site: bookdown::bookdown_site
+documentclass: book
+lang: es
+description: "Informe preliminar: depuración de la base EMI, índice de éxito percibido y efecto de las variables demográficas."
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.align = "center", fig.width = 7, fig.height = 4, dpi = 150)
+source("R/prep.R", encoding = "UTF-8")
+options(knitr.kable.NA = "")
+tema <- theme_minimal(base_size = 12) +
+  theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
+        plot.title.position = "plot", axis.title = element_text(colour = "grey35"))
+azul <- "#2b6cb0"; ocre <- "#b5651d"
+tab <- function(x, cap, align = NULL) kable(x, caption = cap, align = align, booktabs = TRUE) |>
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE, position = "left")
+```
+
+# Presentación {-}
+
+<p class="pregunta">¿Cómo influyen los aspectos demográficos en la autopercepción del éxito en cursos impartidos en inglés (EMI)?</p>
+
+Este libro reúne el análisis exploratorio de la base actualizada de la encuesta *Uso del inglés como medio de instrucción en instituciones de educación superior*. Su propósito es apoyar la decisión del equipo sobre el próximo artículo, que aborda la autopercepción del éxito en EMI desde el marco de **equidad y acceso**.
+
+**Hallazgos principales**
+
+- Se analizaron **`r N` estudiantes**, de `r n_raw` respuestas recibidas.
+- El índice de éxito percibido (5 ítems) tiene una confiabilidad de **α = `r f(a5)`**.
+- Las cuatro variables demográficas propuestas se asocian con el éxito percibido cuando se miran por separado. Cuando se analizan juntas, **solo el colegio bilingüe se mantiene**: suma **`r f(coef(m1)["bilingue"])` puntos** al índice, con todo lo demás constante.
+- Cerca de la mitad de ese efecto pasa por el **nivel de inglés autopercibido** (efecto indirecto = `r f(bt$t0)`, IC 95 %: `r f(ind_ci[1])` a `r f(ind_ci[2])`).
+
+**Estado.** Resultados preliminares. La base aún no está cerrada: hay decisiones de depuración pendientes, que se resumen en el capítulo \@ref(decisiones).
+
+**Cómo leerlo.** Use el índice de la izquierda o las flechas laterales para pasar de capítulo. Todas las cifras se calculan directamente en R a partir de la base, de modo que se actualizan si cambia la depuración.
+
+**Privacidad.** El repositorio contiene solo el código y el libro compilado. La base cruda (con nombres, correos y códigos de estudiante) no se publica.

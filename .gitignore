@@ -1,0 +1,12 @@
+# Nunca subir datos crudos: contienen nombres, correos y códigos de estudiante
+*.xlsx
+*.xls
+*.csv
+data/
+_bookdown_files/
+*.rds
+.Rhistory
+.RData
+.Rproj.user/
+*_cache/
+*_files/

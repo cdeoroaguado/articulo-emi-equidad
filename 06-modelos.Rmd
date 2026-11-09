@@ -1,0 +1,43 @@
+# Modelos de regresión {#modelos}
+
+Cuando las cuatro variables entran juntas en un mismo modelo, el panorama cambia: **solo el colegio bilingüe sigue siendo significativo**. El tipo de colegio, el estrato y la educación de los padres pierden su efecto porque comparten la mayor parte de lo que explican con el bilingüismo escolar. No es un problema técnico de colinealidad: todos los VIF están por debajo de `r f(ceiling(max(vifs) * 10) / 10, 1)`.
+
+```{r}
+estrellas <- function(p) ifelse(p < .001, "***", ifelse(p < .01, "**", ifelse(p < .05, "*", ifelse(p < .1, "†", ""))))
+col_mod <- function(m) { ct <- rob(m); setNames(paste0(f(ct[, 1]), estrellas(ct[, 4])), rownames(ct)) }
+vars <- c(publico = "Colegio público", bilingue = "Colegio bilingüe", estrato = "Estrato (1–6)",
+          edu_max = "Educación de los padres (1–5)",
+          `programaNegocios Internacionales` = "Negocios Internacionales (ref. AE)",
+          `programaContaduría Pública` = "Contaduría Pública (ref. AE)",
+          generoMasculino = "Masculino", semestre = "Semestre",
+          nivel_ing = "Nivel de inglés autopercibido (1–4)")
+cols <- lapply(list(m1, m2, m3), col_mod)
+tb <- tibble(Predictor = unname(vars),
+             `M1 Demográficas` = cols[[1]][names(vars)],
+             `M2 + controles` = cols[[2]][names(vars)],
+             `M3 + nivel de inglés` = cols[[3]][names(vars)]) |>
+  bind_rows(tibble(Predictor = c("R²", "N"),
+                   `M1 Demográficas` = c(f(summary(m1)$r.squared, 3), nobs(m1)),
+                   `M2 + controles` = c(f(summary(m2)$r.squared, 3), nobs(m2)),
+                   `M3 + nivel de inglés` = c(f(summary(m3)$r.squared, 3), nobs(m3))))
+tb[is.na(tb)] <- ""
+tab(tb, "Regresión lineal sobre el índice de éxito percibido (coeficientes no estandarizados, errores robustos HC3)",
+    align = c("l", "r", "r", "r")) |> row_spec(c(2, 9), bold = TRUE)
+```
+
+\*\*\* p < 0,001 · \*\* p < 0,01 · \* p < 0,05 · † p < 0,10. Se excluye el caso de género "Otro". AE = Administración de Empresas.
+
+## Prueba de sensibilidad
+
+Por el efecto techo, el modelo M1 se repitió con una regresión logística ordinal, dividiendo el índice en tres niveles (bajo ≤ 3,6; medio; alto > 4,6). El resultado se mantiene: el colegio bilingüe multiplica por **`r f(or_bil)`** las probabilidades de estar en un nivel más alto (IC 95 %: `r f(or_ci[1])` a `r f(or_ci[2])`; p `r fp(mo_p["bilingue"])`), y las otras tres variables siguen sin ser significativas.
+
+```{r}
+tibble(Predictor = c("Colegio público", "Colegio bilingüe", "Estrato (1–6)", "Educación de los padres (1–5)"),
+       `Razón de odds` = f(exp(coef(mo))),
+       `IC 95 %` = paste(f(exp(coef(mo) - 1.96 * mo_ct[names(coef(mo)), 2])), "a", f(exp(coef(mo) + 1.96 * mo_ct[names(coef(mo)), 2]))),
+       p = fp(mo_p[names(coef(mo))])) |>
+  tab("Regresión logística ordinal sobre el nivel de éxito percibido (bajo, medio, alto)", align = c("l", "r", "r", "r")) |>
+  row_spec(2, bold = TRUE)
+```
+
+Son resultados preliminares, pero se repiten en las tres especificaciones.

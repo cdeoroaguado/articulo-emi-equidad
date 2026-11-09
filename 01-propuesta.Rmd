@@ -1,0 +1,21 @@
+# La propuesta {#propuesta}
+
+El equipo propuso analizar los factores que afectan la percepción de desempeño de los estudiantes en cursos EMI, desde el marco de **equidad y acceso**.
+
+<p class="pregunta">¿Cómo influyen los aspectos demográficos en la autopercepción del éxito en cursos impartidos en inglés (EMI)?</p>
+
+Las variables demográficas propuestas son cuatro. Todas existen en la encuesta y tienen respuestas completas.
+
+```{r}
+tibble(
+  Variable = c("Tipo de colegio", "Colegio bilingüe", "Estrato", "Educación de los padres"),
+  `Pregunta en la encuesta` = c("Tipo de colegio", "El colegio donde cursó su bachillerato es bilingüe",
+                                "Estrato socioeconómico", "Nivel máximo de escolaridad de madre / de padre"),
+  Codificación = c("Público = 1, Privado = 0", "Sí = 1, No = 0", "1 a 6 (ordinal)",
+                   "Máximo de los dos: 1 Primaria, 2 Bachillerato, 3 Técnico/Tecnólogo, 4 Pregrado, 5 Posgrado")
+) |> tab("Variables demográficas propuestas y su codificación")
+```
+
+Como variables de control se usaron el programa, el género y el semestre. El nivel de inglés autopercibido se trató como posible **mediador**, no como variable demográfica.
+
+El equipo quiere empezar a escribir en dos semanas, hacia el **22 de noviembre de 2026**.

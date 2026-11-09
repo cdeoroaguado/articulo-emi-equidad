@@ -1,0 +1,17 @@
+bookdown::gitbook:
+  css: style.css
+  split_by: chapter
+  config:
+    toc:
+      collapse: section
+      before: |
+        <li><strong>&nbsp;Equidad y éxito en EMI</strong></li>
+      after: |
+        <li><a href="https://github.com/rstudio/bookdown" target="_blank">Hecho con bookdown</a></li>
+    download: null
+    sharing: null
+    search: yes
+    fontsettings:
+      theme: white
+      family: serif
+      size: 2
