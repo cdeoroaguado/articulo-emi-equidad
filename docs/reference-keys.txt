@@ -19,12 +19,12 @@ fig:bilestrato
 tab:unnamed-chunk-16
 fig:medias
 tab:unnamed-chunk-17
-tab:unnamed-chunk-18
 tab:unnamed-chunk-19
+tab:unnamed-chunk-20
 fig:ruta
-tab:unnamed-chunk-21
 tab:unnamed-chunk-22
 tab:unnamed-chunk-23
+tab:unnamed-chunk-24
 propuesta
 base
 estudiantes-que-respondieron-más-de-una-vez

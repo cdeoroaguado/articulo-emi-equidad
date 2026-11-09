@@ -25,28 +25,47 @@ ggplot(gd, aes(m, x)) +
 ```
 
 ```{r}
-fila <- function(var, grupos, medias, acuerdo, prueba, p, ef) tibble(Variable = var, Grupos = grupos, Medias = medias,
-  `% con índice ≥ 4` = acuerdo, Prueba = prueba, p = fp(p), `Tamaño del efecto` = ef)
-et <- estr_tab
-bind_rows(
-  fila("Colegio bilingüe", "No / Sí", paste(f(t_bil$m0), "/", f(t_bil$m1)), paste(pct(t_bil$a0), "/", pct(t_bil$a1)),
-       "Mann-Whitney", t_bil$p, paste("r =", f(t_bil$r))),
-  fila("Padres universitarios", "No / Sí", paste(f(t_pad$m0), "/", f(t_pad$m1)), paste(pct(t_pad$a0), "/", pct(t_pad$a1)),
-       "Mann-Whitney", t_pad$p, paste("r =", f(t_pad$r))),
-  fila("Tipo de colegio", "Público / Privado", paste(f(t_pub$m1), "/", f(t_pub$m0)), paste(pct(t_pub$a1), "/", pct(t_pub$a0)),
-       "Mann-Whitney", t_pub$p, paste("r =", f(t_pub$r))),
-  fila("Estrato", "1–2 / 3–4 / 5–6", paste(f(et$m), collapse = " / "), paste(pct(et$a), collapse = " / "),
-       "Kruskal-Wallis (6 niveles)", k_estr$p, paste("ε² =", f(k_estr$eps2, 3))),
-  fila("Educación de los padres", "5 niveles", paste(f(edu_rng[1]), "a", f(edu_rng[2])), "",
-       "Kruskal-Wallis", k_edu$p, paste("ε² =", f(k_edu$eps2, 3))),
-  fila("Programa (control)", "AE / NI / CP", paste(f(prog_tab$m), collapse = " / "), "",
-       "Kruskal-Wallis", k_prog$p, paste("ε² =", f(k_prog$eps2, 3))),
-  fila("Género (control)", "F / M", paste(f(gen_tab$m[1:2]), collapse = " / "), "",
-       "Kruskal-Wallis", k_gen$p, paste("ε² =", f(k_gen$eps2, 3)))
-) |> tab("Diferencias en el índice de éxito percibido", align = c("l", "l", "r", "r", "l", "r", "r")) |>
-  row_spec(1, bold = TRUE)
+# Una fila por grupo: n, mediana, rango intercuartílico (Q1–Q3), media (DE) y % con índice ≥ 4.
+# La prueba, su p y el tamaño del efecto se muestran en la primera fila de cada variable.
+comparar <- function(datos, v, etiqueta, niveles) {
+  dd <- datos[!is.na(datos[[v]]) & as.character(datos[[v]]) %in% names(niveles), ]
+  dd$g <- factor(as.character(dd[[v]]), levels = names(niveles))
+  des <- dd |> group_by(g) |> summarise(n = n(), med = median(EXITO), q1 = quantile(EXITO, .25),
+                                        q3 = quantile(EXITO, .75), m = mean(EXITO), s = sd(EXITO), a = mean(EXITO >= 4))
+  k <- nlevels(dd$g)
+  if (k == 2) {   # Mann-Whitney; r biserial por rangos, positiva si el segundo grupo puntúa más alto
+    x0 <- dd$EXITO[dd$g == levels(dd$g)[1]]; x1 <- dd$EXITO[dd$g == levels(dd$g)[2]]
+    t <- wilcox.test(x1, x0, exact = FALSE)
+    prueba <- "Mann-Whitney"; ef <- paste("r =", f(2 * t$statistic / (length(x0) * length(x1)) - 1))
+  } else {        # Kruskal-Wallis; épsilon cuadrado
+    t <- kruskal.test(EXITO ~ g, dd)
+    prueba <- paste0("Kruskal-Wallis (", k, " grupos)"); ef <- paste("ε² =", f((t$statistic - k + 1) / (nrow(dd) - k), 3))
+  }
+  tibble(Variable = c(etiqueta, rep("", k - 1)), Grupo = unname(niveles[as.character(des$g)]), n = des$n,
+         Mediana = f(des$med, 1), `RIC (Q1–Q3)` = paste(f(des$q1, 1), "–", f(des$q3, 1)),
+         `Media (DE)` = paste0(f(des$m), " (", f(des$s), ")"), `% con índice ≥ 4` = pct(des$a),
+         Prueba = c(prueba, rep("", k - 1)), p = c(fp(t$p.value), rep("", k - 1)),
+         `Tamaño del efecto` = c(ef, rep("", k - 1)))
+}
+tabla_g <- bind_rows(
+  comparar(d, "bilingue", "Colegio bilingüe", c("0" = "No", "1" = "Sí")),
+  comparar(d, "padres_univ", "Padres universitarios", c("0" = "Ninguno", "1" = "Al menos uno")),
+  comparar(d, "publico", "Tipo de colegio", c("1" = "Público", "0" = "Privado")),
+  comparar(d, "estrato", "Estrato", setNames(as.character(1:6), 1:6)),
+  comparar(d, "edu_max", "Educación de los padres (máximo)", c("1" = "Primaria", "2" = "Bachillerato", "3" = "Técnico/Tecnólogo", "4" = "Pregrado", "5" = "Posgrado")),
+  comparar(d, "programa", "Programa (control)", c("Contaduría Pública" = "Contaduría Pública", "Administración de Empresas" = "Administración de Empresas", "Negocios Internacionales" = "Negocios Internacionales")),
+  comparar(d, "genero", "Género (control)", c("Masculino" = "Masculino", "Femenino" = "Femenino"))
+)
+fin_var <- which(c(tabla_g$Variable[-1] != "", TRUE))
+tabla_g |> tab("Diferencias en el índice de éxito percibido por grupo", align = c("l", "l", "r", "r", "r", "r", "r", "l", "r", "r")) |>
+  row_spec(fin_var[-length(fin_var)], extra_css = "border-bottom: 2px solid #7a8191;") |>
+  row_spec(1:2, bold = TRUE)
 ```
 
-*r* = correlación biserial por rangos (positiva cuando el grupo con más recursos puntúa más alto). AE = Administración de Empresas, NI = Negocios Internacionales, CP = Contaduría Pública.
+Como el índice tiene asimetría negativa y efecto techo, las comparaciones se hicieron con pruebas no paramétricas, que comparan rangos y no medias. Por eso la **mediana** y el **rango intercuartílico** (RIC: el intervalo donde está el 50 % central de los estudiantes) son los descriptivos que corresponden a las pruebas; la media se incluye como referencia. *r* = correlación biserial por rangos, positiva cuando el segundo grupo de cada variable puntúa más alto. ε² = épsilon cuadrado del Kruskal-Wallis. El estrato y la educación de los padres se comparan con todos sus niveles. En género se excluye la única persona que marcó "Otro".
 
-El colegio bilingüe tiene el efecto más grande de las cuatro variables demográficas. El programa tiene un efecto todavía mayor (ε² = `r f(k_prog$eps2, 3)`), así que debe controlarse en cualquier modelo.
+```{r include=FALSE}
+med_g <- function(v, nivel) median(d$EXITO[d[[v]] == nivel])
+```
+
+El colegio bilingüe tiene el efecto más grande de las cuatro variables demográficas: el 50 % de los estudiantes de colegio bilingüe tiene un índice de `r f(med_g("bilingue", 1), 1)` o más, frente a `r f(med_g("bilingue", 0), 1)` entre quienes vienen de colegio no bilingüe. En estrato, ese valor central sube de `r f(med_g("estrato", 1), 1)` en el estrato 1 a `r f(med_g("estrato", 5), 1)` en el estrato 5. El programa tiene un efecto todavía mayor (ε² = `r f(k_prog$eps2, 3)`), así que debe controlarse en cualquier modelo. Las diferencias por género no son significativas.
