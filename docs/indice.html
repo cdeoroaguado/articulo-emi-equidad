@@ -642,6 +642,15 @@ Media
 DE
 </th>
 <th style="text-align:right;">
+Mediana
+</th>
+<th style="text-align:right;">
+Mínimo
+</th>
+<th style="text-align:right;">
+Máximo
+</th>
+<th style="text-align:right;">
 % de acuerdo
 </th>
 <th style="text-align:right;">
@@ -664,6 +673,15 @@ Pude entender los conceptos clave de las asignaturas impartidas en inglés.
 0,68
 </td>
 <td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
 95 %
 </td>
 <td style="text-align:right;">
@@ -682,6 +700,15 @@ El inglés fue una barrera para demostrar mi conocimiento sobre los temas de la 
 </td>
 <td style="text-align:right;">
 1,46
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
 </td>
 <td style="text-align:right;">
 26 %
@@ -704,6 +731,15 @@ Mi nivel de inglés me ayudó a tener un buen desempeño académico en las asign
 1,00
 </td>
 <td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
 82 %
 </td>
 <td style="text-align:right;">
@@ -722,6 +758,15 @@ Logré un buen desempeño académico en las asignaturas, a pesar de que fueron d
 </td>
 <td style="text-align:right;">
 0,71
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
 </td>
 <td style="text-align:right;">
 93 %
@@ -744,6 +789,15 @@ En mis cursos del programa en inglés, aprendí igual que en los cursos impartid
 1,10
 </td>
 <td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
 81 %
 </td>
 <td style="text-align:right;">
@@ -752,7 +806,8 @@ En mis cursos del programa en inglés, aprendí igual que en los cursos impartid
 </tr>
 </tbody>
 </table>
-<p>Valores en la escala original (el ítem de barrera sin invertir). % de acuerdo = respuestas 4 o 5.</p>
+<p>Valores en la escala original (1 = totalmente en desacuerdo; 5 = totalmente de acuerdo), con el ítem de barrera sin invertir. % de acuerdo = respuestas 4 o 5.</p>
+<p>Los cinco ítems usan todo el rango de la escala (de 1 a 5), así que hubo estudiantes en ambos extremos. La mediana es 5 en <em>conceptos clave</em>, <em>buen desempeño</em>, <em>inglés ayudó al desempeño</em> y <em>aprendí igual</em>: al menos la mitad de los estudiantes marcó “totalmente de acuerdo”. En el ítem de barrera la mediana es 2, en el lado del desacuerdo, que en ese ítem indica éxito. En los cuatro ítems positivos la media queda por debajo de la mediana y la asimetría es negativa; en el de barrera ocurre lo contrario (media mayor que la mediana, asimetría positiva), porque su redacción está invertida. Es el mismo efecto techo, descrito más abajo, visto desde los dos sentidos de la escala.</p>
 </div>
 </div>
 <div id="confiabilidad" class="section level2 hasAnchor" number="3.2">
@@ -760,7 +815,7 @@ En mis cursos del programa en inglés, aprendí igual que en los cursos impartid
 <p>La confiabilidad se estimó con el alfa de Cronbach y, por las razones que se explican abajo, también con el omega de McDonald y con sus versiones ordinales. Todos los cálculos están en el archivo <code>R/alfa_cronbach.R</code> del repositorio. El alfa se calculó con su fórmula y se verificó contra la función <code>psych::alpha</code>: los dos resultados coinciden.</p>
 <table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;">
 <caption>
-<span id="tab:unnamed-chunk-7">Tabla 3.4: </span>Coeficientes de confiabilidad del índice de éxito percibido (N = 348, k = 5 ítems)
+<span id="tab:unnamed-chunk-8">Tabla 3.4: </span>Coeficientes de confiabilidad del índice de éxito percibido (N = 348, k = 5 ítems)
 </caption>
 <thead>
 <tr>
@@ -871,7 +926,7 @@ Confiabilidad excelente. Combina las dos correcciones: cargas distintas y escala
 <h3><span class="header-section-number">3.2.1</span> Diagnóstico por ítem<a href="indice.html#diagn%C3%B3stico-por-%C3%ADtem" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;">
 <caption>
-<span id="tab:unnamed-chunk-8">Tabla 3.5: </span>Diagnóstico de los ítems del índice
+<span id="tab:unnamed-chunk-9">Tabla 3.5: </span>Diagnóstico de los ítems del índice
 </caption>
 <thead>
 <tr>
@@ -1004,7 +1059,7 @@ Aprendí igual
 <h3><span class="header-section-number">3.2.2</span> Supuestos y estructura<a href="indice.html#supuestos-y-estructura" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <table class="table table-striped table-condensed" style="margin-left: auto; margin-right: auto;">
 <caption>
-<span id="tab:unnamed-chunk-9">Tabla 3.6: </span>Revisión de los supuestos del alfa de Cronbach
+<span id="tab:unnamed-chunk-10">Tabla 3.6: </span>Revisión de los supuestos del alfa de Cronbach
 </caption>
 <thead>
 <tr>
@@ -1089,7 +1144,7 @@ Se cumple parcialmente. Con 5 categorías y efecto techo, las correlaciones de P
 <p><strong>Preparación de las categorías.</strong> Con WLSMV, cada categoría de respuesta genera un umbral, y las categorías con muy pocas respuestas producen umbrales inestables. En 3 ítems la categoría 1 o la 2 tenía menos de 10 respuestas, así que en esos ítems se unieron “totalmente en desacuerdo” y “parcialmente en desacuerdo”. El modelo también se estimó con las cinco categorías originales como análisis de sensibilidad.</p>
 <table class="table table-striped table-condensed" style="width: auto !important; ">
 <caption>
-<span id="tab:unnamed-chunk-10">Tabla 3.7: </span>Frecuencias por categoría de respuesta (ítem de barrera ya invertido)
+<span id="tab:unnamed-chunk-11">Tabla 3.7: </span>Frecuencias por categoría de respuesta (ítem de barrera ya invertido)
 </caption>
 <thead>
 <tr>
@@ -1248,7 +1303,7 @@ Figura 3.2: Modelo de medida del AFC ordinal. El óvalo es el factor latente (di
 <h4><span class="header-section-number">3.2.3.2</span> Ajuste del modelo<a href="indice.html#ajuste-del-modelo" class="anchor-section" aria-label="Anchor link to header"></a></h4>
 <table class="table table-striped table-condensed table" style="width: auto !important;  margin-left: auto; margin-right: auto;">
 <caption>
-<span id="tab:unnamed-chunk-11">Tabla 3.8: </span>Índices de ajuste del AFC ordinal de un factor (WLSMV)
+<span id="tab:unnamed-chunk-12">Tabla 3.8: </span>Índices de ajuste del AFC ordinal de un factor (WLSMV)
 </caption>
 <thead>
 <tr>
@@ -1363,7 +1418,7 @@ Ajuste excelente. Los residuos entre correlaciones observadas y predichas son m�
 <h4><span class="header-section-number">3.2.3.3</span> Cargas factoriales<a href="indice.html#cargas-factoriales" class="anchor-section" aria-label="Anchor link to header"></a></h4>
 <table class="table table-striped table-condensed table" style="width: auto !important;  margin-left: auto; margin-right: auto;">
 <caption>
-<span id="tab:unnamed-chunk-12">Tabla 3.9: </span>Cargas factoriales estandarizadas del AFC ordinal
+<span id="tab:unnamed-chunk-13">Tabla 3.9: </span>Cargas factoriales estandarizadas del AFC ordinal
 </caption>
 <thead>
 <tr>
@@ -1532,7 +1587,7 @@ Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su va
 <h4><span class="header-section-number">3.2.3.4</span> Validez convergente, confiabilidad y residuos<a href="indice.html#validez-convergente-confiabilidad-y-residuos" class="anchor-section" aria-label="Anchor link to header"></a></h4>
 <table class="table table-striped table-condensed table" style="width: auto !important;  margin-left: auto; margin-right: auto;">
 <caption>
-<span id="tab:unnamed-chunk-13">Tabla 3.10: </span>Validez convergente, confiabilidad y diagnóstico de residuos del AFC
+<span id="tab:unnamed-chunk-14">Tabla 3.10: </span>Validez convergente, confiabilidad y diagnóstico de residuos del AFC
 </caption>
 <thead>
 <tr>

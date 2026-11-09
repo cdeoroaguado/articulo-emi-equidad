@@ -91,12 +91,22 @@ orig <- c("conceptos", "barrera", "ingles_desemp", "buen_desemp", "aprendi_igual
 tibble(Dimensión = "Aprendizaje disciplinar", Ítem = textos,
        Media = f(sapply(orig, function(i) mean(d[[i]]))),
        DE = f(sapply(orig, function(i) sd(d[[i]]))),
+       Mediana = f(sapply(orig, function(i) median(d[[i]])), 0),
+       Mínimo = sapply(orig, function(i) min(d[[i]])),
+       Máximo = sapply(orig, function(i) max(d[[i]])),
        `% de acuerdo` = pct(sapply(orig, function(i) mean(d[[i]] >= 4))),
        Asimetría = f(sapply(orig, function(i) skew(d[[i]])))) |>
-  tab(paste0("Descriptivos de los ítems del índice de éxito percibido (N = ", N, ")"), align = c("l", "l", rep("r", 4)))
+  tab(paste0("Descriptivos de los ítems del índice de éxito percibido (N = ", N, ")"), align = c("l", "l", rep("r", 7)))
 ```
 
-Valores en la escala original (el ítem de barrera sin invertir). % de acuerdo = respuestas 4 o 5.
+```{r include=FALSE}
+med_items <- sapply(orig, function(i) median(d[[i]]))
+rango_completo <- all(sapply(orig, function(i) min(d[[i]]) == 1 & max(d[[i]]) == 5))
+```
+
+Valores en la escala original (1 = totalmente en desacuerdo; 5 = totalmente de acuerdo), con el ítem de barrera sin invertir. % de acuerdo = respuestas 4 o 5.
+
+`r if (rango_completo) "Los cinco ítems usan todo el rango de la escala (de 1 a 5), así que hubo estudiantes en ambos extremos." else "No todos los ítems usan el rango completo de la escala."` La mediana es `r f(med_items["conceptos"], 0)` en *conceptos clave*, *buen desempeño*, *inglés ayudó al desempeño* y *aprendí igual`r if (all(med_items[c("conceptos","buen_desemp","ingles_desemp","aprendi_igual")] == 5)) "*: al menos la mitad de los estudiantes marcó \"totalmente de acuerdo\"" else "*"`. En el ítem de barrera la mediana es `r f(med_items["barrera"], 0)`, en el lado del desacuerdo, que en ese ítem indica éxito. En los cuatro ítems positivos la media queda por debajo de la mediana y la asimetría es negativa; en el de barrera ocurre lo contrario (media mayor que la mediana, asimetría positiva), porque su redacción está invertida. Es el mismo efecto techo, descrito más abajo, visto desde los dos sentidos de la escala.
 
 ## Confiabilidad {#confiabilidad}
 
