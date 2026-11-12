@@ -1,0 +1,244 @@
+# Evidencias de validez del instrumento {#validacion}
+
+```{r val-setup, include=FALSE}
+source("R/validacion_instrumento.R", encoding = "UTF-8")
+f3 <- function(x) f(x, 3)
+# Nombre sustantivo de cada factor del AFE según sus ítems marcadores
+nombre_fac <- function(k) {
+  a <- asig_pa
+  if (a$factor[a$codigo == "DI2"] == k) return("Ítems redactados en negativo")
+  if (a$factor[a$codigo == "PR2"] == k) return("Pedagogía y proyección futura")
+  "Experiencia positiva con el inglés y el aprendizaje"
+}
+nf <- sapply(seq_len(k_pa), nombre_fac)
+val_m2 <- aj["M2. Cinco dimensiones teóricas", ]; val_m5 <- aj["M5. Revisado: cinco dimensiones sin PR5 + factor de método", ]
+val_m5_mlr <- aj_mlr["M5. Revisado: cinco dimensiones sin PR5 + factor de método", ]
+phi <- val_teo$phi
+```
+
+En las secciones anteriores se mostró que los cinco ítems del índice de éxito percibido forman un solo factor (sección \@ref(afc)). Esta sección va más allá y examina la estructura del **cuestionario completo**: si sus ítems Likert se organizan en las cinco dimensiones previstas (Dominio del inglés, Aprendizaje disciplinar, Pedagogía y recursos, Motivación y actitudes, y Proyección futura). Se siguió un procedimiento de **validación cruzada**: un análisis factorial exploratorio (AFE) en una mitad de la muestra y un análisis factorial confirmatorio (AFC) en la otra. El código está en `R/validacion_instrumento.R`.
+
+<div class="cuidado">
+**Resumen.** Los datos son adecuados para el análisis factorial, pero **la estructura de cinco dimensiones no se confirma**. El AFE identifica `r k_pa` factores y ningún modelo alcanza un ajuste aceptable en el AFC. Los problemas principales son tres: las dimensiones Dominio del inglés y Aprendizaje disciplinar no se distinguen entre sí (correlación latente de `r f(phi["DI", "AD"])`), los ítems redactados en negativo forman un factor propio y algunos ítems funcionan mal. Estos resultados **no afectan al índice de éxito percibido**, cuya unidimensionalidad se confirmó en la sección \@ref(afc), pero sí deben reportarse como limitación del instrumento.
+</div>
+
+## Procedimiento
+
+**Ítems analizados.** Se usaron `r nrow(it)` de los 25 ítems Likert. Se excluyó la segunda aparición del ítem repetido *"Me resultó fácil expresar mis ideas y opiniones en inglés"*. Los `r sum(it$invertido)` ítems redactados en sentido negativo se invirtieron (6 − respuesta), de modo que en todos los ítems un valor alto indica una experiencia más favorable.
+
+```{r}
+tibble(Código = it$codigo, Dimensión = it$dimension,
+       Ítem = paste0(it$texto, ifelse(it$invertido, " (invertido)", "")),
+       Categorías = n_cat[it$codigo]) |>
+  tab("Ítems del cuestionario, códigos y número de categorías usadas en el análisis", align = c("l", "l", "l", "r")) |>
+  row_spec(which(it$invertido), italic = TRUE)
+```
+
+**Categorías escasas.** Muchos ítems tienen muy pocas respuestas en las categorías de desacuerdo. Como los análisis tratan los ítems como ordinales, las categorías con muy pocos casos producen estimaciones inestables. En cada ítem se unieron las categorías más bajas hasta que la inferior reuniera al menos 10 respuestas, sin dejar nunca menos de tres categorías (última columna de la tabla).
+
+**División de la muestra.** Los `r N` estudiantes se dividieron al azar en dos submuestras de igual tamaño, estratificadas por programa: la **submuestra A** (n = `r nA`) para el AFE y la **submuestra B** (n = `r nB`) para el AFC. Las dos submuestras son equivalentes en las variables principales del estudio:
+
+```{r}
+equiv |> mutate(A = ifelse(row_number() <= 5, pct(A, 1), f(A)), B = ifelse(row_number() <= 5, pct(B, 1), f(B)),
+                p = fp(p)) |>
+  rename(Variable = variable, `Submuestra A` = A, `Submuestra B` = B) |>
+  tab("Equivalencia de las submuestras", align = c("l", "r", "r", "r"))
+```
+
+Pruebas χ² para las variables categóricas y Mann-Whitney para estrato e índice. Ninguna diferencia es significativa.
+
+## Análisis factorial exploratorio (submuestra A)
+
+### Adecuación de los datos
+
+```{r}
+tibble(
+  Indicador = c("KMO (correlaciones de Pearson, submuestra A)", "KMO (correlaciones policóricas, muestra total)",
+                "Prueba de esfericidad de Bartlett", "Determinante de la matriz policórica (submuestra A)"),
+  Valor = c(f3(kmo_pearson_A), f3(kmo_poly_total),
+            paste0("χ²(", bart_A$df, ") = ", f(bart_A$chisq, 1), ", p ", fp(bart_A$p.value)),
+            formatC(det_A, format = "e", digits = 1)),
+  Criterio = c("≥ 0,80 muy bueno", "≥ 0,80 muy bueno", "p < 0,05", "Mayor que 0"),
+  Interpretación = c("Adecuación muy buena: las correlaciones entre ítems se explican bien por factores comunes.",
+                     "Confirma la adecuación con correlaciones que tratan los ítems como ordinales.",
+                     "La matriz de correlaciones difiere de una matriz identidad: hay correlaciones suficientes para factorizar.",
+                     "Muy cercano a 0: algunos ítems están muy correlacionados entre sí (posible redundancia).")
+) |> tab("Adecuación de los datos para el análisis factorial", align = c("l", "r", "l", "l")) |>
+  kable_styling(full_width = TRUE) |> column_spec(4, width = "42%")
+```
+
+Con n = `r nA` y `r nrow(it)` ítems ordinales, la matriz policórica de la submuestra A es casi singular (su autovalor más pequeño es `r formatC(min_eig_A, format = "f", digits = 4)`), lo que hace inestable el KMO calculado sobre ella. Por eso la adecuación se valoró con las correlaciones de Pearson de la submuestra A y con la matriz policórica de la muestra completa, que coinciden en un KMO de `r f(kmo_pearson_A, 2)` a `r f(kmo_poly_total, 2)` (Kaiser, 1974). **Los datos son adecuados para el análisis factorial.**
+
+### Número de factores
+
+```{r paralelo, fig.cap="Análisis paralelo (submuestra A). Se retienen los factores cuyo autovalor observado supera al de datos aleatorios del mismo tamaño (percentil 95 de 100 simulaciones).", fig.height=3.6}
+k_plot <- 10
+pd <- bind_rows(tibble(n = 1:k_plot, v = pa$fa.values[1:k_plot], tipo = "Datos observados"),
+                tibble(n = 1:k_plot, v = pa$fa.sim[1:k_plot], tipo = "Datos aleatorios (simulados)"))
+ggplot(pd, aes(n, v, colour = tipo, linetype = tipo)) +
+  geom_line(linewidth = 0.8) + geom_point(size = 2.4) +
+  annotate("rect", xmin = 0.5, xmax = k_pa + 0.5, ymin = -Inf, ymax = Inf, alpha = 0.08, fill = azul) +
+  annotate("text", x = k_pa + 0.6, y = max(pd$v) * 0.9, hjust = 0, size = 3.4, colour = "grey25",
+           label = paste(k_pa, "factores retenidos")) +
+  scale_colour_manual(values = c("Datos observados" = azul, "Datos aleatorios (simulados)" = ocre), name = NULL) +
+  scale_linetype_manual(values = c("Datos observados" = 1, "Datos aleatorios (simulados)" = 2), name = NULL) +
+  scale_x_continuous(breaks = 1:k_plot) + scale_y_continuous(labels = function(x) f(x, 0)) +
+  labs(x = "Factor", y = "Autovalor") + tema +
+  theme(legend.position = "top", panel.grid.major.y = element_line(colour = "grey92"))
+```
+
+El análisis paralelo (Horn, 1965) indica **`r k_pa` factores**: los autovalores observados de los primeros `r k_pa` factores (`r paste(f(pa$fa.values[1:k_pa]), collapse = ", ")`) superan a los de datos aleatorios, y a partir del cuarto ya no. **No aparecen las cinco dimensiones previstas.**
+
+### Estructura factorial
+
+Se extrajeron `r k_pa` factores por mínimos residuales sobre correlaciones policóricas, con rotación oblicua (oblimin), porque es razonable esperar que los factores se relacionen entre sí.
+
+```{r cargasafe, fig.cap="Matriz de cargas factoriales del AFE (submuestra A, rotación oblimin). Se muestran las cargas de 0,30 o más en valor absoluto. Los ítems están agrupados por su dimensión teórica.", fig.height=7.4, fig.width=8}
+L <- unclass(efa_pa$loadings)
+colnames(L) <- nf
+ld <- as.data.frame(L) |> mutate(codigo = rownames(L)) |>
+  tidyr::pivot_longer(-codigo, names_to = "factor", values_to = "carga") |>
+  left_join(it[, c("codigo", "dimension")], by = "codigo") |>
+  mutate(codigo = factor(codigo, rev(it$codigo)), factor = factor(factor, unique(nf[order(match(nf, c("Experiencia positiva con el inglés y el aprendizaje", "Ítems redactados en negativo", "Pedagogía y proyección futura")))])),
+         dimension = factor(dimension, unique(it$dimension)))
+ggplot(ld, aes(factor, codigo, fill = carga)) +
+  geom_tile(colour = "white", linewidth = 0.6) +
+  geom_text(aes(label = ifelse(abs(carga) >= .30, f(carga), "")), size = 3.2,
+            colour = ifelse(abs(ld$carga) >= .6, "white", "grey15")) +
+  scale_fill_gradient2(low = ocre, mid = "white", high = azul, midpoint = 0, limits = c(-1, 1), name = "Carga", labels = function(x) f(x, 1)) +
+  facet_grid(dimension ~ ., scales = "free_y", space = "free_y", switch = "y") +
+  scale_x_discrete(labels = function(x) gsub(" (con|y) ", "\n\\1 ", x)) +
+  labs(x = NULL, y = NULL) + tema +
+  theme(strip.placement = "outside", strip.text.y.left = element_text(angle = 0, hjust = 1, face = "bold", size = 9),
+        panel.grid = element_blank(), axis.text.x = element_text(size = 9))
+```
+
+```{r}
+ord <- order(asig_pa$factor, -abs(asig_pa$carga))
+tibble(Código = asig_pa$codigo[ord],
+       `Dimensión teórica` = it$dimension[match(asig_pa$codigo[ord], it$codigo)],
+       `Factor del AFE` = nf[asig_pa$factor[ord]],
+       `Carga principal` = f(asig_pa$carga[ord]),
+       `Segunda carga` = f(asig_pa$segunda[ord]),
+       h2 = f(efa_pa$communality[asig_pa$codigo[ord]]),
+       Decisión = ifelse(asig_pa$retenido[ord], "Retenido", "Problemático (carga cruzada)")) |>
+  rename(`h²` = h2) |>
+  tab("Asignación de ítems a los factores del AFE", align = c("l", "l", "l", "r", "r", "r", "l")) |>
+  row_spec(which(!asig_pa$retenido[ord]), bold = TRUE, color = "#b5651d")
+```
+
+Criterio de retención: carga principal ≥ 0,40 y al menos 0,20 mayor que la segunda carga. h² = comunalidad (proporción de la varianza del ítem explicada por los factores). Los `r k_pa` factores explican el `r pct(sum(efa_pa$Vaccounted["Proportion Var", ]))` de la varianza.
+
+```{r}
+P <- efa_pa$Phi; dimnames(P) <- list(nf, nf); P[upper.tri(P)] <- NA
+as.data.frame(ifelse(is.na(P), "", f(P))) |> tibble::rownames_to_column(" ") |>
+  tab("Correlaciones entre los factores del AFE", align = c("l", rep("r", k_pa)))
+```
+
+**Interpretación del AFE.** La estructura empírica no sigue las dimensiones del cuestionario:
+
+- **`r nf[asig_pa$factor[asig_pa$codigo == "DI5"]]`.** Reúne los ítems positivos de Dominio del inglés y de Aprendizaje disciplinar, junto con "me sentí cómodo/a" (Motivación). Para los estudiantes, comprender y expresarse en inglés y aprender la materia forman una sola experiencia.
+- **`r nf[asig_pa$factor[asig_pa$codigo == "DI2"]]`.** Agrupa los `r sum(it$invertido)` ítems negativos, que provienen de tres dimensiones distintas (leer fue un reto, no era capaz, dificultades orales, barrera, prepararme más y cansancio). Su único rasgo común es la redacción, lo que sugiere un **efecto de método**: los estudiantes responden de forma distinta a las afirmaciones negativas, con independencia de su contenido (DiStefano y Motl, 2006).
+- **`r nf[asig_pa$factor[asig_pa$codigo == "PR2"]]`.** Une los ítems de los docentes, materiales, evaluaciones y actividades con los de utilidad futura e intención de seguir tomando cursos en inglés.
+- **Ítems problemáticos:** *`r paste(asig_pa$codigo[!asig_pa$retenido], collapse = ", ")`* tienen cargas cruzadas. Destaca **PR5** (uso de los recursos de apoyo de la universidad), que carga en sentidos opuestos en dos factores: describe una conducta y no una percepción, y no encaja en ninguna dimensión.
+
+Al forzar una solución de cinco factores, la estructura tampoco coincide con la teórica: se separan Pedagogía y Proyección futura, pero los ítems negativos siguen formando un factor propio y los de Dominio y Aprendizaje se reparten entre factores sin respetar sus dimensiones.
+
+## Análisis factorial confirmatorio (submuestra B)
+
+En la submuestra B se pusieron a prueba cinco modelos con estimador WLSMV, tratando los ítems como ordinales:
+
+- **M1:** un solo factor, como modelo de referencia.
+- **M2:** las cinco dimensiones teóricas.
+- **M3:** las cinco dimensiones más un factor de método para los ítems negativos, no correlacionado con los demás.
+- **M4:** la estructura sugerida por el AFE, con los ítems retenidos.
+- **M5:** un modelo revisado, igual a M3 pero sin el ítem PR5.
+
+Como análisis de sensibilidad, los mismos modelos se estimaron tratando los ítems como continuos (MLR).
+
+```{r}
+tibble(Modelo = rownames(aj),
+       `χ² (gl)` = paste0(f(aj[, "chisq.scaled"], 1), " (", aj[, "df.scaled"], ")"),
+       CFI = f3(aj[, "cfi.robust"]), TLI = f3(aj[, "tli.robust"]),
+       `RMSEA [IC 90 %]` = paste0(f3(aj[, "rmsea.robust"]), " [", f3(aj[, "rmsea.ci.lower.robust"]), "–", f3(aj[, "rmsea.ci.upper.robust"]), "]"),
+       SRMR = f3(aj[, "srmr"]),
+       `CFI (MLR)` = f3(aj_mlr[, "cfi.robust"]), `RMSEA (MLR)` = f3(aj_mlr[, "rmsea.robust"]),
+       `Caso Heywood` = ifelse(heywood, "Sí", "No")) |>
+  tab("Ajuste de los modelos confirmatorios (submuestra B)", align = c("l", rep("r", 8))) |>
+  kable_styling(full_width = TRUE) |> row_spec(5, bold = TRUE)
+```
+
+Criterios de buen ajuste: CFI y TLI ≥ 0,95; RMSEA ≤ 0,06 (≤ 0,08 aceptable); SRMR ≤ 0,08 (Hu y Bentler, 1999). Todos los χ² son significativos (p < 0,001). Caso Heywood: alguna carga estandarizada mayor que 1.
+
+**Ningún modelo alcanza un ajuste aceptable con WLSMV.** El modelo teórico de cinco dimensiones (M2) ajusta mal (CFI = `r f3(val_m2["cfi.robust"])`, RMSEA = `r f3(val_m2["rmsea.robust"])`). Añadir el factor de método mejora el ajuste más que cualquier otro cambio (de M2 a M3, el CFI sube de `r f3(val_m2["cfi.robust"])` a `r f3(aj[3, "cfi.robust"])`), lo que confirma el efecto de la redacción negativa. La estructura del AFE (M4) no se replica en la submuestra B. El mejor modelo es el revisado (M5: CFI = `r f3(val_m5["cfi.robust"])`, RMSEA = `r f3(val_m5["rmsea.robust"])`, SRMR = `r f3(val_m5["srmr"])`), pero sigue lejos de los criterios. Con los ítems como continuos, M5 llega al límite de lo aceptable (CFI = `r f3(val_m5_mlr["cfi.robust"])`, RMSEA = `r f3(val_m5_mlr["rmsea.robust"])`, SRMR = `r f3(val_m5_mlr["srmr"])`), lo que sugiere que parte del desajuste se debe a la escasez de respuestas en las categorías bajas. Los casos Heywood en los ítems MA2 y PF3 indican, además, redundancia entre ítems.
+
+### Validez convergente, discriminante y confiabilidad (modelo teórico)
+
+```{r}
+dims <- c(DI = "Dominio del inglés", AD = "Aprendizaje disciplinar", PR = "Pedagogía y recursos", MA = "Motivación y actitudes", PF = "Proyección futura")
+tibble(Dimensión = dims[names(val_teo$ave)], Ítems = sapply(g_teo, length)[names(val_teo$ave)],
+       AVE = f3(val_teo$ave), CR = f3(val_teo$cr), `Omega categórico` = f3(val_teo$omega), `Alfa ordinal` = f3(alfa_dim[names(val_teo$ave)]),
+       `Raíz de la AVE` = f3(sqrt(val_teo$ave)),
+       `Mayor correlación con otra dimensión` = sapply(names(val_teo$ave), function(k) { x <- phi[k, setdiff(colnames(phi), k)]; paste0(f(max(x)), " (", names(which.max(x)), ")") })) |>
+  tab("Validez convergente, confiabilidad y criterio de Fornell-Larcker por dimensión (modelo M2, submuestra B)", align = c("l", rep("r", 7)))
+```
+
+```{r}
+if (!is.null(htmt_teo)) {
+  H <- as.matrix(htmt_teo); H[upper.tri(H, diag = TRUE)] <- NA
+  as.data.frame(ifelse(is.na(H), "", ifelse(H >= .90, paste0("**", f(H), "**"), f(H)))) |>
+    tibble::rownames_to_column(" ") |>
+    tab("Razón heterorrasgo-monorrasgo (HTMT) entre dimensiones (submuestra B)", align = c("l", rep("r", ncol(H)))) |>
+    kable_styling(full_width = FALSE)
+}
+```
+
+HTMT en negrita: mayor o igual a 0,90, lo que indica falta de validez discriminante (Henseler et al., 2015).
+
+**Interpretación.** Cada dimensión, mirada por separado, es internamente consistente y converge: la AVE supera 0,50 y la confiabilidad compuesta supera 0,80 en todas. El problema es la **validez discriminante**. Dominio del inglés y Aprendizaje disciplinar tienen una correlación latente de `r f(phi["DI", "AD"])` (HTMT = `r if (!is.null(htmt_teo)) f(as.matrix(htmt_teo)["AD", "DI"]) else "—"`), y Motivación y actitudes se solapa con ambas (`r f(phi["DI", "MA"])` y `r f(phi["AD", "MA"])`). La raíz de la AVE de estas dimensiones es menor que sus correlaciones con otras, de modo que tampoco cumplen el criterio de Fornell y Larcker (1981). Empíricamente, estas tres dimensiones miden casi lo mismo. Pedagogía y recursos y Proyección futura sí se distinguen del resto.
+
+## Síntesis de los problemas por ítem
+
+```{r}
+tibble(
+  Ítem = c("PR5", "MA2", "PF2 y PF3", "PR1", "DI2, DI4, DI7, AD3, MA1, MA3", "AD5, DI1, PR3"),
+  Problema = c("No carga en Pedagogía en el AFC y tiene cargas opuestas en el AFE",
+               "Carga estandarizada de 0,99 en el modelo teórico y mayor que 1 en el revisado",
+               "Casi redundantes: carga de PF3 mayor que 1 en el AFC",
+               "Carga baja en Pedagogía en el AFC",
+               "Comparten un factor de método por su redacción negativa",
+               "Cargas cruzadas en el AFE"),
+  Recomendación = c("Eliminar de la escala o tratarlo como variable aparte (uso de recursos)",
+                    "Revisar si es redundante con los ítems de comprensión de contenidos",
+                    "Conservar uno de los dos o reformular para que midan aspectos distintos",
+                    "Revisar la redacción (evalúa a los docentes, no la experiencia del estudiante)",
+                    "Modelar el efecto de método o redactar todos los ítems en el mismo sentido",
+                    "Revisar la redacción para que cada ítem apunte a una sola dimensión")
+) |> tab("Ítems problemáticos y recomendaciones", align = c("l", "l", "l"))
+```
+
+## Conclusiones de la validación
+
+1. **Los datos son factorizables**, pero la estructura de **cinco dimensiones no se confirma**: el AFE sugiere `r k_pa` factores y ningún modelo confirmatorio alcanza un ajuste aceptable.
+2. **Dominio del inglés, Aprendizaje disciplinar y Motivación se solapan.** Los estudiantes no distinguen entre comprender en inglés, aprender la materia y sentirse cómodos en clase. Esto es coherente con la fuerte relación entre el índice de éxito y el nivel de inglés autopercibido (capítulo \@ref(ruta)), y obliga a interpretar con cautela la mediación por el inglés: parte de esa relación puede deberse a que ambos constructos se miden de forma muy parecida.
+3. **La redacción negativa genera un efecto de método** que debe modelarse o evitarse en futuras versiones del cuestionario.
+4. **El índice de éxito percibido sigue siendo válido para este artículo.** Sus cinco ítems forman un factor unidimensional con muy buen ajuste (sección \@ref(afc)). El problema está en la estructura del cuestionario completo, no en la medida que usa el artículo.
+
+**Recomendaciones para el equipo:**
+
+- En este artículo, reportar el AFC del índice como evidencia de validez de la variable dependiente, y mencionar en las limitaciones que la estructura completa del cuestionario no se confirmó.
+- Revisar el cuestionario: eliminar o reubicar PR5, depurar redundancias (MA2, PF2/PF3), unificar la redacción de los ítems y revisar la distinción conceptual entre Dominio del inglés y Aprendizaje disciplinar.
+- Aplicar la versión revisada a una **muestra nueva y más grande** (idealmente 300 o más casos por submuestra) y publicar la validación como un artículo psicométrico propio.
+
+### Texto académico sugerido
+
+> Para examinar la estructura interna del cuestionario se realizó una validación cruzada. La muestra (N = `r N`) se dividió aleatoriamente, de forma estratificada por programa, en dos submuestras equivalentes. En la submuestra A (n = `r nA`) se efectuó un análisis factorial exploratorio sobre correlaciones policóricas, con extracción por mínimos residuales y rotación oblimin. Los datos resultaron adecuados para el análisis (KMO = `r f(kmo_pearson_A, 2)`; prueba de Bartlett, χ²(`r bart_A$df`) = `r f(bart_A$chisq, 1)`, p < 0,001). El análisis paralelo sugirió retener `r k_pa` factores, que explicaron el `r pct(sum(efa_pa$Vaccounted["Proportion Var", ]))` de la varianza y no reprodujeron las cinco dimensiones teóricas: los ítems positivos de Dominio del inglés y Aprendizaje disciplinar conformaron un único factor, los ítems redactados en negativo se agruparon en un factor propio y los de Pedagogía y Proyección futura en un tercero. En la submuestra B (n = `r nB`), un análisis factorial confirmatorio con estimador WLSMV mostró un ajuste insuficiente del modelo de cinco dimensiones (CFI = `r f3(val_m2["cfi.robust"])`; RMSEA = `r f3(val_m2["rmsea.robust"])`; SRMR = `r f3(val_m2["srmr"])`). La inclusión de un factor de método para los ítems negativos y la eliminación de un ítem con carga no significativa mejoraron el ajuste (CFI = `r f3(val_m5["cfi.robust"])`; RMSEA = `r f3(val_m5["rmsea.robust"])`; SRMR = `r f3(val_m5["srmr"])`), aunque sin alcanzar los criterios de Hu y Bentler (1999). Las dimensiones mostraron validez convergente (AVE entre `r f(min(val_teo$ave))` y `r f(max(val_teo$ave))`) y confiabilidad adecuada (confiabilidad compuesta entre `r f(min(val_teo$cr))` y `r f(max(val_teo$cr))`), pero Dominio del inglés y Aprendizaje disciplinar carecieron de validez discriminante (r = `r f(phi["DI", "AD"])`). Estos resultados indican que la estructura del instrumento requiere revisión. La variable dependiente de este estudio, en cambio, mostró una estructura unidimensional con buen ajuste.
+
+**Referencias de esta sección**
+
+- DiStefano, C. y Motl, R. W. (2006). Further investigating method effects associated with negatively worded items on self-report surveys. *Structural Equation Modeling, 13*(3), 440–464.
+- Fornell, C. y Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. *Journal of Marketing Research, 18*(1), 39–50.
+- Henseler, J., Ringle, C. M. y Sarstedt, M. (2015). A new criterion for assessing discriminant validity in variance-based structural equation modeling. *Journal of the Academy of Marketing Science, 43*(1), 115–135.
+- Horn, J. L. (1965). A rationale and test for the number of factors in factor analysis. *Psychometrika, 30*(2), 179–185.
+- Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
+- Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika, 39*(1), 31–36.

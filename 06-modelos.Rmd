@@ -41,3 +41,137 @@ tibble(Predictor = c("Colegio público", "Colegio bilingüe", "Estrato (1–6)",
 ```
 
 Son resultados preliminares, pero se repiten en las tres especificaciones.
+
+## Interacciones: ¿la ventaja del colegio bilingüe es igual para todos? {#interacciones}
+
+```{r int-setup, include=FALSE}
+source("R/interacciones.R", encoding = "UTF-8")
+ir <- function(nombre) int_res[int_res$Interaccion == nombre, ]
+ie <- function(x, k) f(x[k, "est"])
+ce <- int_celdas_estrato; cp <- int_celdas_programa
+m_ce <- function(g, b) ce$m[ce$g == g & ce$bilingue == b]
+n_ce <- function(g, b) ce$n[ce$g == g & ce$bilingue == b]
+med_cp <- function(p, b) cp$med[cp$g == p & cp$bilingue == b]
+n_cp <- function(p, b) cp$n[cp$g == p & cp$bilingue == b]
+```
+
+Los modelos anteriores suponen que haber estudiado en un colegio bilingüe tiene el mismo efecto para todos los estudiantes. Desde el marco de equidad conviene revisar ese supuesto, porque una misma credencial escolar puede rendir distinto según el origen social del estudiante o el programa al que llega. Para examinarlo se añadieron al modelo M2, una por una, `r nrow(int_res)` interacciones elegidas por su sentido teórico. Las variables continuas (estrato, educación de los padres y nivel de inglés) se centraron en su media. Cada interacción se evaluó con una prueba de Wald con errores robustos (HC3), y los valores p se ajustaron con el método de Holm, ya que probar diez términos aumenta la probabilidad de encontrar alguno significativo por azar.
+
+Estas interacciones no se plantearon como hipótesis antes de ver los datos. Por eso se presentan como un **análisis exploratorio**, cuyos resultados deberán confirmarse en otra muestra.
+
+```{r}
+int_res |>
+  dplyr::transmute(Interacción = Interaccion,
+                   b = ifelse(is.na(b), "—", f(b, 3)), EE = ifelse(is.na(ee), "—", f(ee, 3)),
+                   `F (gl)` = paste0(f(F), " (", gl1, ", ", gl2, ")"),
+                   p = fp(p), `p ajustado (Holm)` = fp(p_holm), `ΔR²` = f(dR2, 3)) |>
+  tab("Interacciones evaluadas sobre el modelo M2 (errores HC3)", align = c("l", rep("r", 6))) |>
+  kable_styling(full_width = TRUE) |>
+  row_spec(which(int_res$p_holm < .05), bold = TRUE, background = "#e7eef6")
+```
+
+ΔR² = aumento de la varianza explicada respecto al modelo sin la interacción. La interacción con el programa tiene dos grados de libertad porque compara tres programas, así que no tiene un único coeficiente.
+
+Dos interacciones se mantienen después del ajuste: la del colegio bilingüe con el estrato (p ajustado = `r fp(ir("Colegio bilingüe × estrato")$p_holm)`) y la del colegio bilingüe con el programa (p ajustado `r fp(ir("Colegio bilingüe × programa")$p_holm)`). La interacción entre colegio público y estrato tenía un p de `r fp(ir("Colegio público × estrato")$p)`, pero no resiste la corrección. La del colegio bilingüe con el colegio público tampoco, y además se apoya en solo `r sum(int_d$publico == 1 & int_d$bilingue == 1)` estudiantes de colegio público bilingüe. Ninguna interacción con el nivel de inglés se acerca a la significancia.
+
+### Según el estrato
+
+```{r int-estrato, fig.cap="Índice de éxito percibido según colegio bilingüe y estrato (media e intervalo de confianza del 95 %). Debajo de cada barra, el número de estudiantes.", fig.height=3.8}
+ce_p <- ce |> mutate(grupo = factor(ifelse(bilingue == 1, "Colegio bilingüe", "Colegio no bilingüe"),
+                                    c("Colegio no bilingüe", "Colegio bilingüe")))
+ggplot(ce_p, aes(g, m, colour = grupo, group = grupo)) +
+  geom_line(linewidth = 0.8, position = position_dodge(0.25)) +
+  geom_errorbar(aes(ymin = m - 1.96 * se, ymax = m + 1.96 * se), width = 0.12, position = position_dodge(0.25), linewidth = 0.6) +
+  geom_point(size = 3, position = position_dodge(0.25)) +
+  geom_text(aes(y = m - 1.96 * se, label = paste0("n = ", n)), position = position_dodge(0.25), vjust = 1.6, size = 3, show.legend = FALSE) +
+  scale_colour_manual(values = c("Colegio no bilingüe" = ocre, "Colegio bilingüe" = azul), name = NULL) +
+  scale_y_continuous(labels = function(x) f(x, 1), expand = expansion(mult = c(0.12, 0.05))) +
+  labs(x = "Estrato", y = "Índice de éxito percibido (media)") + tema +
+  theme(legend.position = "top", panel.grid.major.y = element_line(colour = "grey92"))
+```
+
+```{r}
+tibble(Estrato = rownames(int_ef_estrato),
+       `Efecto del colegio bilingüe` = f(int_ef_estrato[, "est"]),
+       `IC 95 %` = paste(f(int_ef_estrato[, "li"]), "a", f(int_ef_estrato[, "ls"])),
+       p = fp(int_ef_estrato[, "p"]),
+       `Estudiantes bilingües / no bilingües` = sapply(rownames(int_ef_estrato), function(g) paste(n_ce(g, 1), "/", n_ce(g, 0)))) |>
+  tab("Efecto del colegio bilingüe en cada grupo de estrato (efectos simples del modelo con interacción)", align = c("l", "r", "r", "r", "r"))
+```
+
+Entre los estudiantes que no estudiaron en colegio bilingüe, el índice es prácticamente igual en todos los estratos: la media va de `r f(m_ce("1–2", 0))` en los estratos 1 y 2 a `r f(m_ce("5–6", 0))` en los estratos 5 y 6. Entre quienes sí estudiaron en uno, el índice sube con el estrato, de `r f(m_ce("1–2", 1))` a `r f(m_ce("3–4", 1))` y luego a `r f(m_ce("5–6", 1))`. En consecuencia, la ventaja asociada al colegio bilingüe es de `r ie(int_ef_estrato, "3–4")` puntos en los estratos 3 y 4 y se duplica en los estratos 5 y 6 (`r ie(int_ef_estrato, "5–6")` puntos).
+
+Una lectura posible es que la etiqueta "colegio bilingüe" reúne ofertas muy diferentes. En los colegios de mayor costo suele haber más horas en inglés, docentes con mayor dominio del idioma y certificaciones internacionales; en otros, el programa bilingüe puede ser más limitado. La encuesta no pregunta por el tipo ni por la intensidad del programa bilingüe, así que esta explicación no puede comprobarse con estos datos. Aun así, el patrón es relevante para el marco de equidad: el beneficio de la escolaridad bilingüe se concentra en los estudiantes que ya contaban con más recursos, un patrón de acumulación de ventajas.
+
+En los estratos 1 y 2 la estimación no permite concluir nada, porque solo `r n_ce("1–2", 1)` de esos estudiantes estudiaron en colegio bilingüe. La conclusión que sí se sostiene es la diferencia entre los estratos medios y los altos.
+
+```{r}
+int_rob |> mutate(b = ifelse(is.na(b), "—", f(b, 3)), p = fp(p)) |>
+  tab("Robustez de la interacción colegio bilingüe × estrato", align = c("l", "r", "r"))
+```
+
+La interacción se mantiene con una regresión ordinal, sin los estudiantes bilingües de los estratos más bajos, sin los casos más influyentes y al estimarla junto con la interacción por programa. Solo se debilita cuando el estrato se agrupa en tres categorías (p = `r fp(int_rob$p[6])`), lo que es esperable porque esa versión pierde la información de los seis niveles y descansa en el grupo pequeño de los estratos 1 y 2.
+
+### Según el programa
+
+```{r int-programa, fig.cap="Índice de éxito percibido según colegio bilingüe y programa (media e intervalo de confianza del 95 %). Debajo de cada barra, el número de estudiantes.", fig.height=3.8}
+cp_p <- cp |> mutate(grupo = factor(ifelse(bilingue == 1, "Colegio bilingüe", "Colegio no bilingüe"),
+                                    c("Colegio no bilingüe", "Colegio bilingüe")),
+                     g = factor(g, c("Contaduría Pública", "Administración de Empresas", "Negocios Internacionales")))
+ggplot(cp_p, aes(g, m, colour = grupo, group = grupo)) +
+  geom_errorbar(aes(ymin = m - 1.96 * se, ymax = m + 1.96 * se), width = 0.12, position = position_dodge(0.35), linewidth = 0.6) +
+  geom_point(size = 3, position = position_dodge(0.35)) +
+  geom_text(aes(y = m - 1.96 * se, label = paste0("n = ", n)), position = position_dodge(0.35), vjust = 1.6, size = 3, show.legend = FALSE) +
+  scale_colour_manual(values = c("Colegio no bilingüe" = ocre, "Colegio bilingüe" = azul), name = NULL) +
+  scale_y_continuous(labels = function(x) f(x, 1), expand = expansion(mult = c(0.12, 0.05))) +
+  scale_x_discrete(labels = c("Contaduría Pública" = "Contaduría\nPública", "Administración de Empresas" = "Administración\nde Empresas",
+                              "Negocios Internacionales" = "Negocios\nInternacionales")) +
+  labs(x = NULL, y = "Índice de éxito percibido (media)") + tema +
+  theme(legend.position = "top", panel.grid.major.y = element_line(colour = "grey92"))
+```
+
+```{r}
+tibble(Programa = rownames(int_ef_programa),
+       `Efecto del colegio bilingüe` = f(int_ef_programa[, "est"]),
+       `IC 95 %` = paste(f(int_ef_programa[, "li"]), "a", f(int_ef_programa[, "ls"])),
+       p = fp(int_ef_programa[, "p"]),
+       `Valor central: no bilingüe / bilingüe` = sapply(rownames(int_ef_programa), function(p) paste(f(med_cp(p, 0), 1), "/", f(med_cp(p, 1), 1))),
+       `Estudiantes bilingües / no bilingües` = sapply(rownames(int_ef_programa), function(p) paste(n_cp(p, 1), "/", n_cp(p, 0)))) |>
+  tab("Efecto del colegio bilingüe en cada programa (efectos simples del modelo con interacción)", align = c("l", "r", "r", "r", "r", "r"))
+```
+
+"Valor central" es el puntaje que separa a la mitad inferior de la superior de cada grupo (la mediana).
+
+En Administración de Empresas está la brecha más grande: el colegio bilingüe se asocia con `r ie(int_ef_programa, "Administración de Empresas")` puntos más en el índice, y el valor central pasa de `r f(med_cp("Administración de Empresas", 0), 1)` a `r f(med_cp("Administración de Empresas", 1), 1)`. En Contaduría Pública la diferencia va en la misma dirección (`r ie(int_ef_programa, "Contaduría Pública")` puntos), pero no alcanza la significancia (p = `r fp(int_ef_programa["Contaduría Pública", "p"])`), probablemente porque solo `r n_cp("Contaduría Pública", 1)` estudiantes de ese programa vienen de colegio bilingüe. En Negocios Internacionales la diferencia desaparece (`r ie(int_ef_programa, "Negocios Internacionales")` puntos, p = `r fp(int_ef_programa["Negocios Internacionales", "p"])`): en ese programa, más de la mitad de los estudiantes de ambos grupos tiene un índice de `r f(med_cp("Negocios Internacionales", 0), 1)` o más.
+
+Con estos datos no es posible saber por qué Negocios Internacionales borra la diferencia. Puede tratarse de selección, si quienes eligen ese programa ya tienen una relación más estrecha con el inglés aunque no hayan estudiado en un colegio bilingüe. También puede deberse al diseño del programa, si ofrece más asignaturas en inglés y con ello más práctica desde los primeros semestres. Para la institución, el resultado señala dónde se concentra la desventaja: en Administración de Empresas, y posiblemente en Contaduría Pública, los estudiantes que no vienen de colegio bilingüe son los que más se beneficiarían de apoyos lingüísticos en las asignaturas dictadas en inglés.
+
+### Modelo con las dos interacciones
+
+```{r}
+lab_int <- c(publico = "Colegio público", bilingue = "Colegio bilingüe", estrato_c = "Estrato (centrado)",
+             edu_c = "Educación de los padres (centrada)", `programaNegocios Internacionales` = "Negocios Internacionales (ref. AE)",
+             `programaContaduría Pública` = "Contaduría Pública (ref. AE)", masc = "Masculino", semestre = "Semestre",
+             `bilingue:estrato_c` = "Colegio bilingüe × estrato",
+             `bilingue:programaNegocios Internacionales` = "Colegio bilingüe × Negocios Internacionales",
+             `bilingue:programaContaduría Pública` = "Colegio bilingüe × Contaduría Pública")
+ct4 <- int_mf_ct[names(lab_int), ]
+tibble(Predictor = unname(lab_int), b = f(ct4[, 1], 3), EE = f(ct4[, 2], 3), p = fp(ct4[, 4])) |>
+  bind_rows(tibble(Predictor = c("R²", "N"), b = c(f(int_r2["M4"], 3), as.character(nobs(int_mf))), EE = "", p = "")) |>
+  tab("Modelo M4: modelo M2 con las interacciones del colegio bilingüe con el estrato y con el programa (errores HC3)", align = c("l", "r", "r", "r")) |>
+  row_spec(9:11, bold = TRUE)
+```
+
+Las dos interacciones, en conjunto, son significativas (F(`r int_W2$Df[2]`, `r int_W2$Res.Df[2]`) = `r f(int_W2$F[2])`, p `r fp(int_W2$"Pr(>F)"[2])`) y elevan la varianza explicada de `r f(int_r2["M2"], 3)` a `r f(int_r2["M4"], 3)`. Con las interacciones en el modelo, el coeficiente del colegio bilingüe (`r f(ct4["bilingue", 1])`) ya no es un efecto promedio: corresponde a un estudiante de Administración de Empresas con el estrato medio de la muestra. El coeficiente de Negocios Internacionales (`r f(ct4["programaNegocios Internacionales", 1])`) indica que, entre quienes no estudiaron en colegio bilingüe, los de ese programa puntúan bastante más alto que los de Administración.
+
+### La relación entre el inglés y el éxito es la misma en todos los grupos
+
+La pendiente del nivel de inglés autopercibido es de `r f(int_pend_ingles["No bilingüe", "est"])` entre quienes no estudiaron en colegio bilingüe y de `r f(int_pend_ingles["Bilingüe", "est"])` entre quienes sí, una diferencia que no es significativa (p = `r fp(ir("Nivel de inglés × colegio bilingüe")$p)`). Tampoco cambia con el estrato ni con el tipo de colegio. Sentirse más competente en inglés se asocia con más éxito percibido en la misma medida para todos los grupos. Las diferencias de origen, por tanto, operan sobre el punto de partida (cuánto inglés trae el estudiante y qué tan bien le rinde su colegio bilingüe) y no sobre cuánto le aporta ese inglés una vez en la universidad.
+
+### Alcance de estos resultados
+
+Las dos interacciones son consistentes y resisten varias pruebas de robustez, pero tienen tres limitaciones que deben declararse en el artículo. Surgieron de un análisis exploratorio y no de hipótesis previas. Algunas celdas son pequeñas, en particular los estudiantes bilingües de los estratos 1 y 2 y los de Contaduría Pública. Y, como el resto del estudio, se basan en autopercepciones de estudiantes que ya están en los últimos semestres. Una nueva cohorte, con información sobre el tipo de programa bilingüe de cada colegio, permitiría poner a prueba las explicaciones propuestas aquí.
+
+### Texto sugerido para el artículo
+
+> Para examinar si la asociación entre la escolaridad bilingüe y el éxito percibido variaba según otras condiciones de origen, se añadieron al modelo con controles, de forma separada, diez términos de interacción. Las variables continuas se centraron en su media, se usaron errores estándar robustos (HC3) y los valores p se corrigieron por comparaciones múltiples con el método de Holm. Dos interacciones resultaron significativas tras la corrección. La primera, entre colegio bilingüe y estrato (b = `r f(ir("Colegio bilingüe × estrato")$b, 2)`, p ajustado = `r fp(ir("Colegio bilingüe × estrato")$p_holm)`), indica que la ventaja asociada al colegio bilingüe aumenta con el estrato socioeconómico: fue de `r ie(int_ef_estrato, "3–4")` puntos en los estratos 3 y 4 y de `r ie(int_ef_estrato, "5–6")` en los estratos 5 y 6, mientras que en los estudiantes de colegio no bilingüe el índice no varió entre estratos. La segunda, entre colegio bilingüe y programa (F(`r ir("Colegio bilingüe × programa")$gl1`, `r ir("Colegio bilingüe × programa")$gl2`) = `r f(ir("Colegio bilingüe × programa")$F)`, p ajustado `r fp(ir("Colegio bilingüe × programa")$p_holm)`), muestra que la diferencia entre estudiantes de colegio bilingüe y no bilingüe se concentró en Administración de Empresas (`r ie(int_ef_programa, "Administración de Empresas")` puntos) y fue nula en Negocios Internacionales. Ambas interacciones elevaron la varianza explicada de `r f(int_r2["M2"], 3)` a `r f(int_r2["M4"], 3)`. La relación entre el nivel de inglés autopercibido y el éxito percibido no varió entre grupos. Dado su carácter exploratorio y el tamaño reducido de algunas celdas, estos resultados deben confirmarse en muestras independientes.

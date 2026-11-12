@@ -1,14 +1,34 @@
 # Cómo medir la autopercepción del éxito {#indice}
 
-La encuesta no tiene notas ni promedio académico, así que el "éxito" es autopercibido. Se construyó un índice con cinco ítems de la dimensión **Aprendizaje disciplinar** del cuestionario, los que hablan directamente de comprender y rendir en las asignaturas. Cada ítem va de 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo), y el índice es el promedio de los cinco.
-
-## Dimensiones del instrumento y origen de los ítems {#dimensiones}
-
-```{r dims, include=FALSE}
+```{r ind-setup, include=FALSE}
 source("R/dimensiones.R", encoding = "UTF-8")
+source("R/alfa_cronbach.R", encoding = "UTF-8")
+source("R/afc_ordinal.R", encoding = "UTF-8")
+source("R/justificacion_indice.R", encoding = "UTF-8")
+ic <- function(x) paste(f(x[1], 3), "–", f(x[2], 3))
+nivel <- function(x) ifelse(x >= .90, "excelente", ifelse(x >= .80, "buena", ifelse(x >= .70, "aceptable", "insuficiente")))
+trunc1 <- function(x) f(min(x, 1), 3)
+orig <- c("conceptos", "barrera", "ingles_desemp", "buen_desemp", "aprendi_igual")
+etq5 <- c(conceptos = "Conceptos clave", barrera_r = "Barrera (invertido)", ingles_desemp = "Inglés ayudó al desempeño",
+          buen_desemp = "Buen desempeño", aprendi_igual = "Aprendí igual")
+fa_ <- ajuste_afc; fs_ <- ajuste_afc_sen
+cg <- cargas_afc; cg$sen <- cargas_sen$est.std
+jv <- just_versiones
 ```
 
-El cuestionario tiene `r nrow(dim_tab)` ítems Likert de cinco puntos, organizados en `r length(unique(dim_tab$dimension))` dimensiones. La tabla muestra a qué dimensión pertenece cada ítem y cuáles se usan en este análisis.
+La encuesta no incluye calificaciones ni promedio académico, de modo que el éxito que estudia este artículo es el que perciben los propios estudiantes. Este capítulo explica cómo se midió. Primero define el constructo y muestra de dónde salen los ítems y cómo se eligieron. Luego describe las respuestas, pone a prueba la estructura del índice con un análisis factorial confirmatorio y estima su confiabilidad. Por último, explica cómo se calcula el índice, comprueba que los resultados no dependen de esa elección y reúne los límites de la medida.
+
+## Qué se quiere medir {#constructo}
+
+La pregunta central de la investigación sobre EMI es si enseñar una disciplina en una lengua extranjera afecta el aprendizaje de sus contenidos (Macaro et al., 2018). En coherencia con esa pregunta, el constructo se definió como **la valoración que hace el estudiante de haber comprendido, aprendido y rendido en las asignaturas de su carrera dictadas en inglés**.
+
+La definición deja fuera, a propósito, tres aspectos que suelen confundirse con el éxito: el dominio del inglés, las condiciones de enseñanza y las actitudes hacia la experiencia. En el modelo del artículo cada uno cumple otro papel. El dominio del inglés es un posible mediador, las condiciones de enseñanza son contexto y las actitudes acompañan la experiencia sin ser su resultado. Mantenerlos separados de la variable dependiente evita que el modelo explique el éxito con una parte de sí mismo.
+
+Para sostener el uso de la medida se reunieron las fuentes de evidencia que recomiendan los *Standards for Educational and Psychological Testing* (AERA, APA y NCME, 2014): el contenido de los ítems (secciones \@ref(dimensiones) y \@ref(seleccion)), la estructura interna del índice (secciones \@ref(afc) y \@ref(confiabilidad)) y la estabilidad de los resultados cuando el índice se construye de otra manera (sección \@ref(robustez-indice)).
+
+## De dónde salen los ítems {#dimensiones}
+
+El cuestionario tiene `r nrow(dim_tab)` ítems Likert de cinco puntos, organizados en `r length(unique(dim_tab$dimension))` dimensiones que corresponden a las secciones del formulario: *Experiencia lingüística en asignaturas dictadas en inglés* (Dominio del inglés), *Aprendizaje en asignaturas dictadas en inglés* (Aprendizaje disciplinar), *Pedagogía y recursos para el aprendizaje*, *Motivación y actitudes* y *Pensando más adelante* (Proyección futura).
 
 ```{r}
 dt <- dim_tab
@@ -24,6 +44,8 @@ tibble(`#` = seq_len(nrow(dt)), Dimensión = dt$dimension, Ítem = dt$item, `Uso
   row_spec(cumsum(cuenta)[-length(cuenta)], extra_css = "border-bottom: 2px solid #7a8191;")
 ```
 
+En azul, los ítems que forman el índice; en cursiva, los dos que solo entran en una versión ampliada que se usa como prueba de robustez (sección \@ref(robustez-indice)).
+
 ```{r}
 dt |> mutate(dimension = factor(dimension, orden)) |> group_by(Dimensión = dimension) |>
   summarise(`N.º de ítems` = n(),
@@ -32,19 +54,52 @@ dt |> mutate(dimension = factor(dimension, orden)) |> group_by(Dimensión = dime
   tab("Resumen de ítems por dimensión", align = c("l", "r", "r", "r"))
 ```
 
-Las dimensiones corresponden a las secciones del formulario: *Experiencia lingüística en asignaturas dictadas en inglés (dominio del inglés)*, *Aprendizaje en asignaturas dictadas en inglés (aprendizaje disciplinar)*, *Pedagogía y recursos para el aprendizaje*, *Motivación y actitudes* y *Pensando más adelante* (proyección futura). En azul y negrita, los ítems del índice; en cursiva, los que solo entran en la versión ampliada de 7 ítems.
+## Cómo se eligieron los ítems {#seleccion}
 
-**Por qué estos cinco ítems.** La dimensión Aprendizaje disciplinar tiene siete ítems, y el índice usa cinco. Se dejaron por fuera dos:
+Los ítems se escogieron por su contenido, antes de examinar sus propiedades psicométricas, con tres criterios: pertenecer a la dimensión Aprendizaje disciplinar, referirse a un resultado del aprendizaje y no a un recurso previo, y no repetir otro ítem del cuestionario. Cinco de los siete ítems de esa dimensión cumplen los tres.
 
-- *"Mi conocimiento previo de la materia me ayudó a comprender las temáticas del curso"*: no mide éxito, sino un recurso previo del estudiante. En el modelo conceptual sería un antecedente, no parte del resultado.
-- *"Me resultó fácil expresar mis ideas y opiniones en inglés durante las clases"*: es la repetición exacta de un ítem de la dimensión Dominio del inglés (capítulo \@ref(base)) y mide habilidad oral en el idioma, no aprendizaje de la materia.
+```{r}
+tibble(
+  Ítem = c("Pude entender los conceptos clave de las asignaturas impartidas en inglés.",
+           "Mi conocimiento previo de la materia me ayudó a comprender las temáticas del curso.",
+           "El inglés fue una barrera para demostrar mi conocimiento sobre los temas de la clase.",
+           "Mi nivel de inglés me ayudó a tener un buen desempeño académico en las asignaturas.",
+           "Me resultó fácil expresar mis ideas y opiniones en inglés durante las clases.",
+           "Logré un buen desempeño académico en las asignaturas, a pesar de que fueron dictadas en inglés.",
+           "En mis cursos del programa en inglés, aprendí igual que en los cursos impartidos en español."),
+  Decisión = c("Incluido", "Excluido", "Incluido (invertido)", "Incluido", "Excluido", "Incluido", "Incluido"),
+  Razón = c("Resultado: comprensión de los contenidos de la asignatura.",
+            "Antecedente: describe lo que el estudiante ya sabía, no lo que logró en el curso.",
+            "Resultado: si el idioma impidió demostrar lo aprendido. Es la única pregunta que plantea el inglés como obstáculo.",
+            "Resultado: desempeño académico atribuido al nivel de inglés.",
+            "Repite un ítem de Dominio del inglés (capítulo \\@ref(base)) y mide habilidad oral en el idioma, no aprendizaje de la materia.",
+            "Resultado: desempeño académico logrado en las asignaturas.",
+            "Resultado: aprendizaje comparado con el de los cursos en español, la comparación que interesa en EMI.")
+) |> tab("Ítems de la dimensión Aprendizaje disciplinar y decisión sobre su inclusión en el índice", align = c("l", "l", "l")) |>
+  kable_styling(full_width = TRUE) |> row_spec(c(2, 5), italic = TRUE, color = "#7a8191")
+```
 
-Los otros cinco ítems preguntan por el resultado del aprendizaje en la asignatura (entender los conceptos, rendir bien, aprender igual que en español, que el inglés no impida demostrar lo aprendido). Por eso el índice representa **una sola dimensión del instrumento**, y el análisis factorial confirmatorio de la sección \@ref(afc) pone a prueba precisamente esa estructura.
+El ítem de barrera está redactado en sentido negativo (estar de acuerdo significa menos éxito), así que se invirtió con la operación 6 − respuesta antes de cualquier análisis.
 
-### Descriptivos de los ítems del índice
+Las otras cuatro dimensiones quedaron fuera porque miden constructos que el modelo trata como distintos de la variable dependiente:
 
-```{r likert, fig.cap="Distribución de las respuestas a los cinco ítems del índice (dimensión Aprendizaje disciplinar). Las barras se centran en la respuesta neutral; el ítem de barrera se muestra con su redacción original, de modo que para él el desacuerdo indica éxito.", fig.height=3.6, fig.width=8.5}
-orig <- c("conceptos", "barrera", "ingles_desemp", "buen_desemp", "aprendi_igual")
+```{r}
+tibble(Dimensión = c("Dominio del inglés", "Pedagogía y recursos", "Motivación y actitudes", "Proyección futura"),
+       `Qué mide` = c("Habilidad para comprender, leer y participar en inglés",
+                      "Docentes, materiales, evaluaciones, actividades y apoyos",
+                      "Esfuerzo adicional, comodidad y cansancio",
+                      "Utilidad futura e intención de seguir en cursos en inglés"),
+       `Papel en el estudio` = c("Antecedente y posible mediador del éxito. Incluirla en el índice haría circular la mediación por el inglés.",
+                                 "Condiciones de enseñanza que pueden explicar el éxito, pero no son el éxito del estudiante.",
+                                 "Experiencias que acompañan el aprendizaje, no su resultado.",
+                                 "Expectativas e intenciones posteriores al curso.")) |>
+  tab("Dimensiones no incluidas en el índice y razón de su exclusión", align = c("l", "l", "l")) |>
+  kable_styling(full_width = TRUE)
+```
+
+## Cómo responden los estudiantes {#descriptivos}
+
+```{r likert, fig.cap="Distribución de las respuestas a los cinco ítems del índice. Las barras se centran en la respuesta neutral. El ítem de barrera se muestra con su redacción original, de modo que en él el desacuerdo indica éxito.", fig.height=3.6, fig.width=8.5}
 cats <- c("Totalmente en desacuerdo", "Parcialmente en desacuerdo", "Indiferente", "Parcialmente de acuerdo", "Totalmente de acuerdo")
 cols_lk <- c("#b5651d", "#e3b98f", "#c9ccd3", "#93b6dd", "#2b6cb0")
 lk_long <- bind_rows(lapply(seq_along(orig), function(j) {
@@ -52,11 +107,7 @@ lk_long <- bind_rows(lapply(seq_along(orig), function(j) {
   tibble(item = c("Conceptos clave", "El inglés fue una barrera", "Inglés ayudó al desempeño", "Buen desempeño", "Aprendí igual")[j],
          cat = factor(cats, cats), p = p)
 }))
-lk_long <- lk_long |> group_by(item) |>
-  mutate(neg = ifelse(as.integer(cat) <= 2, -p, ifelse(as.integer(cat) == 3, -p / 2, p)),
-         acuerdo = sum(p[as.integer(cat) >= 4])) |> ungroup()
 orden_items <- rev(c("Conceptos clave", "Buen desempeño", "Inglés ayudó al desempeño", "Aprendí igual", "El inglés fue una barrera"))
-# Segmentos explícitos: desde el centro hacia afuera, neutral/2 -> parcial -> total
 seg <- lk_long |> group_by(item) |> group_modify(function(g, key) {
   p <- g$p
   tibble(cat = factor(cats[c(3, 2, 1, 3, 4, 5)], cats),
@@ -87,7 +138,6 @@ textos <- c(
   "Mi nivel de inglés me ayudó a tener un buen desempeño académico en las asignaturas.",
   "Logré un buen desempeño académico en las asignaturas, a pesar de que fueron dictadas en inglés.",
   "En mis cursos del programa en inglés, aprendí igual que en los cursos impartidos en español.")
-orig <- c("conceptos", "barrera", "ingles_desemp", "buen_desemp", "aprendi_igual")
 tibble(Dimensión = "Aprendizaje disciplinar", Ítem = textos,
        Media = f(sapply(orig, function(i) mean(d[[i]]))),
        DE = f(sapply(orig, function(i) sd(d[[i]]))),
@@ -101,122 +151,35 @@ tibble(Dimensión = "Aprendizaje disciplinar", Ítem = textos,
 
 ```{r include=FALSE}
 pos4 <- c("conceptos", "buen_desemp", "ingles_desemp", "aprendi_igual")
-p_total <- sapply(pos4, function(i) mean(d[[i]] == 5))          # % "totalmente de acuerdo"
-p_des_barrera <- mean(d$barrera <= 2)                            # % en desacuerdo con "barrera"
+p_total <- sapply(pos4, function(i) mean(d[[i]] == 5))
+p_des_barrera <- mean(d$barrera <= 2)
 medias_pos <- sapply(pos4, function(i) mean(d[[i]]))
 rango_completo <- all(sapply(orig, function(i) min(d[[i]]) == 1 & max(d[[i]]) == 5))
 ```
 
 Valores en la escala original (1 = totalmente en desacuerdo; 5 = totalmente de acuerdo), con el ítem de barrera sin invertir. % de acuerdo = respuestas 4 o 5.
 
-`r if (rango_completo) "Los cinco ítems usan todo el rango de la escala (de 1 a 5), así que hubo estudiantes en ambos extremos." else "No todos los ítems usan el rango completo de la escala."` En *conceptos clave*, *buen desempeño*, *inglés ayudó al desempeño* y *aprendí igual*, más del 50 % de los estudiantes respondió 5, "totalmente de acuerdo" (entre el `r pct(min(p_total))` y el `r pct(max(p_total))`, según el ítem). En el ítem de barrera, más del 50 % de los estudiantes respondió en desacuerdo (el `r pct(p_des_barrera)` marcó 1 o 2), lo que en ese ítem indica éxito.
+`r if (rango_completo) "Los cinco ítems usan todo el rango de la escala, así que hubo estudiantes en ambos extremos." else "No todos los ítems usan el rango completo de la escala."` En *conceptos clave*, *buen desempeño*, *inglés ayudó al desempeño* y *aprendí igual*, más del 50 % de los estudiantes respondió 5, "totalmente de acuerdo" (entre el `r pct(min(p_total))` y el `r pct(max(p_total))`, según el ítem). En el ítem de barrera, más del 50 % respondió en desacuerdo (el `r pct(p_des_barrera)` marcó 1 o 2), lo que en ese ítem indica éxito.
 
-Como más de la mitad de los estudiantes se concentra en el extremo favorable, las medias de los cuatro ítems positivos (entre `r f(min(medias_pos))` y `r f(max(medias_pos))`) quedan por debajo de 5, arrastradas por el grupo menor que respondió valores bajos, y la asimetría es negativa. En el ítem de barrera ocurre lo contrario (media de `r f(mean(d$barrera))` y asimetría positiva), porque su redacción está invertida. Es el mismo efecto techo, descrito más abajo, visto desde los dos sentidos de la escala.
+Como más de la mitad de los estudiantes se concentra en el extremo favorable, las medias de los cuatro ítems positivos (entre `r f(min(medias_pos))` y `r f(max(medias_pos))`) quedan por debajo de 5, arrastradas por el grupo menor que respondió valores bajos, y la asimetría es negativa. En el ítem de barrera ocurre lo contrario (media de `r f(mean(d$barrera))` y asimetría positiva) porque su redacción está invertida. Esta concentración de respuestas favorables, un efecto techo, condiciona dos decisiones que vienen después: tratar los ítems como ordinales en el análisis factorial y usar errores robustos en los modelos.
 
-## Confiabilidad {#confiabilidad}
+## Estructura interna: análisis factorial confirmatorio {#afc}
 
-```{r confiab, include=FALSE}
-source("R/alfa_cronbach.R", encoding = "UTF-8")
-source("R/afc_ordinal.R", encoding = "UTF-8")
-ic <- function(x) paste(f(x[1], 3), "–", f(x[2], 3))
-nivel <- function(x) ifelse(x >= .90, "excelente", ifelse(x >= .80, "buena", ifelse(x >= .70, "aceptable", "insuficiente")))
-```
+Antes de promediar los cinco ítems hay que comprobar que miden una sola cosa. Para eso se estimó un modelo de un factor con los cinco ítems como indicadores, tratados como **variables ordinales**. El estimador fue WLSMV (mínimos cuadrados ponderados con media y varianza ajustadas) sobre la matriz de correlaciones policóricas, el recomendado para ítems Likert de pocas categorías y distribución asimétrica (Brown, 2015; Li, 2016). La escala del factor se fijó con varianza igual a 1, de modo que se estiman las cinco cargas. Se usó el paquete `lavaan` (Rosseel, 2012).
 
-La confiabilidad se estimó con el alfa de Cronbach y, por las razones que se explican abajo, también con el omega de McDonald y con sus versiones ordinales. Todos los cálculos están en el archivo `R/alfa_cronbach.R` del repositorio. El alfa se calculó con su fórmula y se verificó contra la función `psych::alpha`: los dos resultados coinciden.
+Con WLSMV, cada categoría de respuesta genera un umbral, y las categorías con muy pocas respuestas producen umbrales inestables. En `r length(escasos)` ítems la categoría 1 o la 2 tenía menos de 10 respuestas, así que en esos ítems se unieron "totalmente en desacuerdo" y "parcialmente en desacuerdo". El modelo también se estimó con las cinco categorías originales, como análisis de sensibilidad.
 
 ```{r}
-tibble(
-  Coeficiente = c("Alfa de Cronbach", "Alfa estandarizado", "Omega de McDonald (ω total)",
-                  "Alfa ordinal", "Omega ordinal"),
-  Base = c("Covarianzas (Pearson)", "Correlaciones (Pearson)", "Modelo de un factor (ML)",
-           "Correlaciones policóricas", "Modelo de un factor sobre correlaciones policóricas"),
-  Valor = f(c(alfa, alfa_std, omega, alfa_ord, omega_ord), 3),
-  `IC 95 %` = c(paste0(ic(ic_feldt), " (Feldt)<br>", ic(ic_boot_alfa), " (bootstrap)"), "", paste0(ic(ic_boot_omega), " (bootstrap)"), "", ""),
-  Interpretación = c(
-    paste0("Consistencia interna ", nivel(alfa), ". Supera el mínimo de 0,70 para investigación (Nunnally y Bernstein, 1994) y el límite inferior del intervalo también lo supera."),
-    paste0("Mayor que el alfa bruto (diferencia de ", f(alfa_std - alfa, 3), ") porque los ítems tienen varianzas muy distintas. Indica que no se cumple la tau-equivalencia."),
-    paste0("Confiabilidad ", nivel(omega), ". No exige que los ítems pesen igual, así que es el coeficiente más adecuado aquí y el que se recomienda reportar (Dunn et al., 2014)."),
-    paste0("Confiabilidad ", nivel(alfa_ord), ". Trata las respuestas Likert como ordinales (Zumbo et al., 2007). Es más alto porque corrige la atenuación que producen 5 categorías con efecto techo."),
-    paste0("Confiabilidad ", nivel(omega_ord), ". Combina las dos correcciones: cargas distintas y escala ordinal."))
-) |> kable(format = "html", caption = paste0("Coeficientes de confiabilidad del índice de éxito percibido (N = ", n, ", k = ", k, " ítems)"),
-           align = c("l", "l", "r", "r", "l"), escape = FALSE) |>
-  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |>
-  row_spec(c(1, 3), bold = TRUE) |> column_spec(5, width = "40%")
-```
-
-IC de Feldt (1965) basado en la distribución F; IC bootstrap percentil con `r f(B, 0)` remuestreos de estudiantes.
-
-### Diagnóstico por ítem
-
-```{r}
-etq_items <- c("Conceptos clave", "Barrera (invertido)", "Inglés ayudó al desempeño", "Buen desempeño", "Aprendí igual")
-interp_item <- with(diag_items, ifelse(
-  alfa_sin_item > alfa,
-  paste0("Ítem más débil. Discrimina por encima del mínimo de 0,30, pero eliminarlo subiría α a ", f(alfa_sin_item, 3), ". Tiene la mayor varianza (", f(varianza), "), probablemente por su redacción en negativo."),
-  ifelse(carga >= .70,
-         paste0("Ítem fuerte: carga alta y buena discriminación. Eliminarlo bajaría α a ", f(alfa_sin_item, 3), "."),
-         paste0("Ítem adecuado: carga aceptable y buena discriminación. Eliminarlo bajaría α a ", f(alfa_sin_item, 3), "."))))
-tibble(Ítem = etq_items,
-       Varianza = f(diag_items$varianza),
-       `Carga factorial` = f(diag_items$carga),
-       `r ítem-total corregida` = f(diag_items$r_item_total),
-       `α si se elimina` = f(diag_items$alfa_sin_item, 3),
-       Interpretación = interp_item) |>
-  kable(format = "html", caption = "Diagnóstico de los ítems del índice", align = c("l", "r", "r", "r", "r", "l")) |>
-  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |>
-  row_spec(which(diag_items$alfa_sin_item > alfa), bold = TRUE) |> column_spec(6, width = "40%")
-```
-
-Carga factorial: análisis factorial de un factor por máxima verosimilitud. r ítem-total corregida: correlación de cada ítem con la suma de los otros cuatro. Criterios de referencia: carga ≥ 0,40 y r ítem-total ≥ 0,30.
-
-### Supuestos y estructura
-
-```{r}
-tibble(
-  Revisión = c("Unidimensionalidad (modelo exploratorio de un factor, ML)",
-               "Tau-equivalencia (cargas iguales)",
-               "Varianzas de los ítems",
-               "Nivel de medida"),
-  Resultado = c(paste0("χ²(", ajuste$dof, ") = ", f(ajuste$STATISTIC), ", p = ", f(ajuste$PVAL, 3),
-                       "<br>RMSEA = ", f(ajuste$RMSEA[1], 3), ", TLI = ", f(ajuste$TLI, 3)),
-                paste0("Cargas de ", f(min(cargas)), " a ", f(max(cargas))),
-                paste0("De ", f(min(var_items)), " a ", f(max(var_items))),
-                "Likert de 5 puntos, asimetría negativa"),
-  Criterio = c("p > 0,05; RMSEA ≤ 0,06; TLI ≥ 0,95 (Hu y Bentler, 1999)",
-               "Cargas similares entre ítems",
-               "Varianzas similares",
-               "Variables continuas"),
-  Interpretación = c(
-    "Se cumple. Un solo factor reproduce bien las correlaciones entre los cinco ítems, así que tiene sentido sumarlos en un índice.",
-    "No se cumple. El ítem de barrera pesa bastante menos que los demás. Por eso el alfa subestima la confiabilidad y el omega es preferible.",
-    "No se cumple. El ítem de barrera tiene casi cinco veces la varianza del ítem de conceptos, lo que explica la diferencia entre alfa bruto y estandarizado.",
-    "Se cumple parcialmente. Con 5 categorías y efecto techo, las correlaciones de Pearson se atenúan; las versiones ordinales corrigen ese sesgo.")
-) |> kable(format = "html", caption = "Revisión de los supuestos del alfa de Cronbach", align = c("l", "l", "l", "l"), escape = FALSE) |>
-  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |> column_spec(4, width = "40%")
-```
-
-Esta revisión usa un análisis factorial exploratorio que trata los ítems como continuos. La estructura se pone a prueba de forma confirmatoria, y con los ítems como ordinales, en la sección siguiente.
-
-### Análisis factorial confirmatorio ordinal {#afc}
-
-Se estimó un modelo de un factor (éxito percibido) con los cinco ítems como indicadores, tratados como **variables ordinales**. El estimador fue **WLSMV** (mínimos cuadrados ponderados con media y varianza ajustadas) sobre la matriz de correlaciones policóricas. Es el estimador recomendado para ítems Likert de pocas categorías y distribución asimétrica (Brown, 2015; Li, 2016). La escala del factor se fijó con varianza igual a 1, de modo que se estiman las cinco cargas. Se usó el paquete `lavaan` (Rosseel, 2012); el código está en `R/afc_ordinal.R`.
-
-**Preparación de las categorías.** Con WLSMV, cada categoría de respuesta genera un umbral, y las categorías con muy pocas respuestas producen umbrales inestables. En `r length(escasos)` ítems la categoría 1 o la 2 tenía menos de 10 respuestas, así que en esos ítems se unieron "totalmente en desacuerdo" y "parcialmente en desacuerdo". El modelo también se estimó con las cinco categorías originales como análisis de sensibilidad.
-
-```{r}
-etq5 <- c(conceptos = "Conceptos clave", barrera_r = "Barrera (invertido)", ingles_desemp = "Inglés ayudó al desempeño",
-          buen_desemp = "Buen desempeño", aprendi_igual = "Aprendí igual")
 fr <- as.data.frame(t(frec)); names(fr) <- paste("Cat.", 1:5)
 fr_tab <- cbind(Ítem = unname(etq5[rownames(fr)]), fr,
                 Tratamiento = ifelse(rownames(fr) %in% escasos, "Categorías 1 y 2 unidas", "5 categorías"))
 rownames(fr_tab) <- NULL
-fr_tab |>
-  tab("Frecuencias por categoría de respuesta (ítem de barrera ya invertido)", align = c("l", rep("r", 5), "l"))
+fr_tab |> tab("Frecuencias por categoría de respuesta (ítem de barrera ya invertido)", align = c("l", rep("r", 5), "l"))
 ```
 
-#### Diagrama del modelo
+### Diagrama del modelo
 
-```{r afcdiag, fig.cap="Modelo de medida del AFC ordinal. El óvalo es el factor latente (dimensión Aprendizaje disciplinar); los rectángulos son los ítems observados. En las flechas, las cargas estandarizadas (λ); debajo de cada ítem, su varianza residual (1 − R²). Todas las cargas son significativas (p < 0,001).", fig.height=4.6, fig.width=9}
+```{r afcdiag, fig.cap="Modelo de medida del AFC ordinal. El óvalo es el factor latente y los rectángulos son los ítems observados. En las flechas, las cargas estandarizadas (λ); debajo de cada ítem, su varianza residual (1 − R²). Todas las cargas son significativas (p < 0,001).", fig.height=4.6, fig.width=9}
 lam_d <- setNames(cargas_afc$est.std, cargas_afc$rhs)[items5]
 nod <- tibble(it = items5, x = seq(1, 9, length.out = 5), y = 1.6,
               lab = c("Conceptos\nclave", "Barrera\n(invertido)", "Inglés ayudó\nal desempeño", "Buen\ndesempeño", "Aprendí\nigual"),
@@ -224,7 +187,6 @@ nod <- tibble(it = items5, x = seq(1, 9, length.out = 5), y = 1.6,
 th <- seq(0, 2 * pi, length.out = 200)
 elip <- tibble(x = 5 + 2.1 * cos(th), y = 4.3 + 0.55 * sin(th))
 bw <- 0.75; bh <- 0.38
-# punto de salida de cada flecha en el borde de la elipse
 ang <- atan2((nod$y + bh) - 4.3, nod$x - 5)
 sx <- 5 + 2.1 * cos(ang) * 0.98; sy <- 4.3 + 0.55 * sin(ang) * 0.98
 flechas <- tibble(x = sx, y = sy, xend = nod$x, yend = nod$y + bh + 0.04, lam = nod$lam,
@@ -246,121 +208,226 @@ ggplot() +
   coord_equal(xlim = c(0, 10), ylim = c(0.2, 4.95)) + theme_void()
 ```
 
-Las cargas más altas están en *Conceptos clave* (`r f(lam_d["conceptos"])`) e *Inglés ayudó al desempeño* (`r f(lam_d["ingles_desemp"])`): son los ítems que mejor representan la dimensión. *Barrera* tiene la carga más baja (`r f(lam_d["barrera_r"])`) y la mayor varianza residual (`r f(1 - lam_d["barrera_r"]^2)`): más de la mitad de lo que mide no lo comparte con el factor.
+Las cargas más altas corresponden a *Conceptos clave* (`r f(lam_d["conceptos"])`) e *Inglés ayudó al desempeño* (`r f(lam_d["ingles_desemp"])`), los ítems que mejor representan el constructo. *Barrera* tiene la carga más baja (`r f(lam_d["barrera_r"])`) y la mayor varianza residual (`r f(1 - lam_d["barrera_r"]^2)`): más de la mitad de lo que mide no lo comparte con el factor.
 
-#### Ajuste del modelo
+### Ajuste del modelo
 
 ```{r}
-fa_ <- ajuste_afc; fs_ <- ajuste_afc_sen
 fila_aj <- function(ind, val, sen, crit, interp) tibble(Índice = ind, `Modelo principal` = val, `Sensibilidad (5 categorías)` = sen, Criterio = crit, Interpretación = interp)
-trunc1 <- function(x) f(min(x, 1), 3)
 bind_rows(
   fila_aj("χ² escalado (gl)", paste0(f(fa_["chisq.scaled"]), " (", fa_["df.scaled"], ")"), paste0(f(fs_["chisq.scaled"]), " (", fs_["df.scaled"], ")"),
           "p > 0,05", paste0("p = ", f(fa_["pvalue.scaled"], 3), ". No se rechaza el modelo: las correlaciones que predice un solo factor no difieren de las observadas.")),
   fila_aj("CFI robusto", trunc1(fa_["cfi.robust"]), trunc1(fs_["cfi.robust"]), "≥ 0,95",
           "Ajuste excelente. El modelo de un factor explica casi toda la covariación entre los ítems."),
   fila_aj("TLI robusto", trunc1(fa_["tli.robust"]), trunc1(fs_["tli.robust"]), "≥ 0,95",
-          if (fa_["tli.robust"] > 1) "Ajuste excelente. El valor estimado supera 1, algo esperable con χ² menor que sus grados de libertad; se reporta como 1,000." else "Ajuste excelente."),
+          if (fa_["tli.robust"] > 1) "Ajuste excelente. El valor estimado supera 1, algo esperable cuando el χ² es menor que sus grados de libertad; se reporta como 1,000." else "Ajuste excelente."),
   fila_aj("RMSEA robusto [IC 90 %]", paste0(f(fa_["rmsea.robust"], 3), " [", f(fa_["rmsea.ci.lower.robust"], 3), "–", f(fa_["rmsea.ci.upper.robust"], 3), "]"),
           paste0(f(fs_["rmsea.robust"], 3), " [", f(fs_["rmsea.ci.lower.robust"], 3), "–", f(fs_["rmsea.ci.upper.robust"], 3), "]"),
           "≤ 0,06; límite superior del IC ≤ 0,08",
           "Ajuste bueno. El límite superior del intervalo queda por debajo de 0,08; el intervalo es amplio porque el modelo tiene pocos grados de libertad."),
   fila_aj("SRMR", f(fa_["srmr"], 3), f(fs_["srmr"], 3), "≤ 0,08",
-          "Ajuste excelente. Los residuos entre correlaciones observadas y predichas son mínimos.")
+          "Ajuste excelente. Las diferencias entre correlaciones observadas y predichas son mínimas.")
 ) |> tab("Índices de ajuste del AFC ordinal de un factor (WLSMV)", align = c("l", "r", "r", "l", "l")) |>
   kable_styling(full_width = TRUE) |> column_spec(5, width = "40%")
 ```
 
 Criterios de Hu y Bentler (1999). Con WLSMV se reportan el χ² escalado y las versiones robustas de CFI, TLI y RMSEA. Un modelo de un factor con cinco indicadores tiene 5 grados de libertad, lo que limita la precisión del RMSEA.
 
-#### Cargas factoriales
+### Cargas factoriales
 
 ```{r}
-cg <- cargas_afc; cg$sen <- cargas_sen$est.std
 interp_carga <- ifelse(cg$est.std >= .70,
-  "Carga alta: el ítem refleja bien el constructo (comparte más del 49 % de su varianza con el factor).",
-  "Carga aceptable, pero la más baja del modelo. El ítem comparte menos de la mitad de su varianza con el factor, aunque supera con holgura el mínimo de 0,50.")
+  "Carga alta: el ítem comparte más de la mitad de su varianza con el factor.",
+  "Carga aceptable y la más baja del modelo. El ítem comparte menos de la mitad de su varianza con el factor, aunque supera con holgura el mínimo de 0,50.")
 tibble(Dimensión = "Aprendizaje disciplinar", Ítem = unname(etq5[cg$rhs]),
-       `λ estandarizada` = f(cg$est.std),
-       EE = f(cg$se, 3),
+       `λ estandarizada` = f(cg$est.std), EE = f(cg$se, 3),
        `IC 95 %` = paste(f(cg$ci.lower), "–", f(cg$ci.upper)),
-       R2 = f(R2_afc[cg$rhs]),
-       `λ (5 categorías)` = f(cg$sen),
+       R2 = f(R2_afc[cg$rhs]), `λ (5 categorías)` = f(cg$sen),
        Interpretación = interp_carga) |>
   rename(`R²` = R2) |>
   tab("Cargas factoriales estandarizadas del AFC ordinal", align = c("l", "l", "r", "r", "r", "r", "r", "l")) |>
   kable_styling(full_width = TRUE) |> row_spec(which(cg$est.std < .70), bold = TRUE) |> column_spec(8, width = "36%")
 ```
 
-Todas las cargas son significativas (p < 0,001). R² = proporción de la varianza de la respuesta latente de cada ítem que explica el factor. La última columna numérica muestra las cargas del modelo de sensibilidad.
+Todas las cargas son significativas (p < 0,001). R² es la proporción de la varianza de la respuesta latente de cada ítem que explica el factor. La penúltima columna muestra las cargas del modelo con las cinco categorías originales.
 
-#### Validez convergente, confiabilidad y residuos
+### Validez convergente y residuos
 
 ```{r}
 top_mi <- mi[1, ]
 tibble(
   Indicador = c("Varianza media extraída (AVE)", "Confiabilidad compuesta (escala latente)",
-                "Omega categórico (Green y Yang, 2009)", "Residuo máximo entre correlaciones", "Índice de modificación más alto"),
-  Valor = c(f(ave, 3), f(cr, 3), f(omega_cat, 3), f(res_max, 3),
+                "Residuo máximo entre correlaciones", "Índice de modificación más alto"),
+  Valor = c(f(ave, 3), f(cr, 3), f(res_max, 3),
             paste0(f(top_mi$mi), " (", etq5[top_mi$lhs], " con ", etq5[top_mi$rhs], ")")),
-  Criterio = c("≥ 0,50 (Fornell y Larcker, 1981)", "≥ 0,70", "≥ 0,70", "< 0,10", "< 3,84 (χ² con 1 gl, p = 0,05)"),
+  Criterio = c("≥ 0,50 (Fornell y Larcker, 1981)", "≥ 0,70", "< 0,10", "< 3,84 (χ² con 1 gl, p = 0,05)"),
   Interpretación = c(
     paste0("Validez convergente adecuada: en promedio, el factor explica el ", pct(ave), " de la varianza de los ítems."),
     "Confiabilidad alta del constructo latente, calculada con las cargas del AFC.",
-    "Confiabilidad buena del puntaje que realmente se usará (la suma de los ítems en su escala original). Es el valor de omega más apropiado para reportar con ítems ordinales.",
     "Ningún par de ítems queda mal explicado por el modelo.",
-    "Ninguna correlación entre errores mejoraría el modelo de forma significativa. No hay redundancias ni dimensiones ocultas entre los ítems.")
-) |> tab("Validez convergente, confiabilidad y diagnóstico de residuos del AFC", align = c("l", "r", "l", "l")) |>
+    "Ninguna correlación entre errores mejoraría el modelo de forma significativa, así que no hay ítems redundantes ni dimensiones ocultas.")
+) |> tab("Validez convergente y diagnóstico de residuos del AFC", align = c("l", "r", "l", "l")) |>
   kable_styling(full_width = TRUE) |> column_spec(4, width = "45%")
 ```
 
-#### Interpretación del AFC
+### Interpretación del AFC
 
-El AFC ordinal **confirma que los cinco ítems miden un solo constructo**. En el modelo principal, los cinco índices de ajuste cumplen los criterios de referencia, y ningún residuo ni índice de modificación sugiere una estructura distinta.
+El AFC confirma que **los cinco ítems miden un solo constructo**. En el modelo principal los cinco índices de ajuste cumplen los criterios de referencia, y ningún residuo ni índice de modificación sugiere otra estructura.
 
-Con las categorías originales, las cargas son prácticamente iguales y el ajuste sigue siendo bueno (CFI = `r trunc1(fs_["cfi.robust"])`, SRMR = `r f(fs_["srmr"], 3)`). La única diferencia es que el límite superior del IC del RMSEA llega a `r f(fs_["rmsea.ci.upper.robust"], 3)`: con solo 5 grados de libertad ese intervalo es muy impreciso, y su estimación puntual (`r f(fs_["rmsea.robust"], 3)`) sigue siendo baja. Por tanto, la unión de categorías escasas estabiliza los umbrales pero no cambia las conclusiones.
+Con las categorías originales las cargas son prácticamente iguales y el ajuste sigue siendo bueno (CFI = `r trunc1(fs_["cfi.robust"])`, SRMR = `r f(fs_["srmr"], 3)`). La única diferencia es que el límite superior del intervalo del RMSEA llega a `r f(fs_["rmsea.ci.upper.robust"], 3)`; con 5 grados de libertad ese intervalo es muy impreciso y su estimación puntual (`r f(fs_["rmsea.robust"], 3)`) sigue siendo baja. Unir las categorías escasas estabiliza los umbrales sin cambiar las conclusiones.
 
-El ítem de barrera vuelve a ser el más débil (λ = `r f(cg$est.std[cg$rhs == "barrera_r"])`), pero su carga es significativa y supera el mínimo de 0,50. El AFC no da motivos psicométricos para eliminarlo; la decisión puede tomarse por razones conceptuales.
+El ítem de barrera es el más débil (λ = `r f(cg$est.std[cg$rhs == "barrera_r"])`), pero su carga es significativa y supera el mínimo de 0,50. El AFC no ofrece razones psicométricas para eliminarlo.
 
-**Para el artículo** se puede reportar, por ejemplo: *"Un análisis factorial confirmatorio con estimador WLSMV mostró un ajuste excelente del modelo unidimensional (χ²(`r fa_["df.scaled"]`) = `r f(fa_["chisq.scaled"])`, p = `r f(fa_["pvalue.scaled"], 3)`; CFI = `r trunc1(fa_["cfi.robust"])`; RMSEA = `r f(fa_["rmsea.robust"], 3)`, IC 90 % [`r f(fa_["rmsea.ci.lower.robust"], 3)`, `r f(fa_["rmsea.ci.upper.robust"], 3)`]; SRMR = `r f(fa_["srmr"], 3)`), con cargas estandarizadas entre `r f(min(cg$est.std))` y `r f(max(cg$est.std))`, AVE = `r f(ave)` y omega categórico = `r f(omega_cat)`."*
+## Confiabilidad {#confiabilidad}
 
-### Interpretación de conjunto
+Confirmado que el índice es unidimensional, falta estimar qué tan precisa es la medida. El coeficiente más usado es el alfa de Cronbach, pero sus supuestos deben revisarse antes de tomarlo como estimación principal.
 
-El índice de cinco ítems es **confiable y unidimensional**. Todas las estimaciones de confiabilidad superan 0,80, y el análisis factorial confirmatorio ordinal muestra un ajuste excelente del modelo de un factor. Esto respalda tratar los cinco ítems como una sola medida de éxito percibido.
+### Supuestos del alfa de Cronbach
 
-Como no se cumple la tau-equivalencia, el alfa de Cronbach (`r f(alfa, 3)`) es una estimación conservadora. **Para el artículo se recomienda reportar como coeficiente principal el omega categórico del AFC (ω = `r f(omega_cat, 3)`)**, que corresponde al puntaje que se usa en los análisis y respeta la naturaleza ordinal de los ítems. El omega de McDonald con correlaciones de Pearson (ω = `r f(omega, 3)`, IC 95 % `r ic(ic_boot_omega)`) y el alfa de Cronbach pueden reportarse como referencia.
+```{r}
+tibble(
+  Supuesto = c("Unidimensionalidad", "Tau-equivalencia (cargas iguales)", "Varianzas similares entre ítems", "Ítems continuos"),
+  Resultado = c(paste0("AFC ordinal: χ²(", fa_["df.scaled"], ") = ", f(fa_["chisq.scaled"]), ", p = ", f(fa_["pvalue.scaled"], 3), "; CFI = ", trunc1(fa_["cfi.robust"])),
+                paste0("Cargas de ", f(min(cg$est.std)), " a ", f(max(cg$est.std))),
+                paste0("De ", f(min(var_items)), " a ", f(max(var_items))),
+                "Likert de 5 puntos con efecto techo"),
+  `¿Se cumple?` = c("Sí", "No", "No", "En parte"),
+  Consecuencia = c(
+    "Tiene sentido resumir los cinco ítems en un solo puntaje.",
+    "El ítem de barrera pesa menos que los demás, así que el alfa subestima la confiabilidad. El omega, que no exige este supuesto, es preferible.",
+    "El ítem de barrera tiene casi cinco veces la varianza del ítem de conceptos, lo que explica la diferencia entre el alfa bruto y el estandarizado.",
+    "Con pocas categorías y efecto techo las correlaciones de Pearson se atenúan. Las versiones ordinales corrigen ese sesgo.")
+) |> tab("Revisión de los supuestos del alfa de Cronbach", align = c("l", "l", "c", "l")) |>
+  kable_styling(full_width = TRUE) |> column_spec(4, width = "45%")
+```
 
-El único punto débil es el **ítem de barrera**: carga menos en el factor, tiene la mayor varianza y su eliminación subiría el alfa a `r f(diag_items$alfa_sin_item[2], 3)`. No es un problema grave, porque su discriminación (`r f(diag_items$r_item_total[2])`) supera el mínimo de 0,30, pero conviene decidir si se mantiene. A favor de mantenerlo está que es el único ítem que pregunta directamente por el inglés como obstáculo, que es central para el marco de equidad.
+### Coeficientes de confiabilidad
 
-Si se amplía el índice con "Sentía que no era capaz de aprender bien debido a mis limitaciones en inglés" (invertido) y "Me sentí cómodo/a porque entendí las temáticas", el alfa llega a `r f(a7, 3)`, aunque esa versión mezcla aspectos afectivos con el desempeño.
+Como dos supuestos del alfa no se cumplen, la confiabilidad se estimó también con el omega de McDonald, que admite cargas distintas, y con versiones ordinales de ambos coeficientes. El alfa se calculó con su fórmula y se verificó contra la función `psych::alpha` del paquete `psych`.
 
-**Referencias citadas en esta sección**
+```{r}
+tibble(
+  Coeficiente = c("Alfa de Cronbach", "Alfa estandarizado", "Omega de McDonald (ω total)", "Alfa ordinal", "Omega ordinal",
+                  "Omega categórico"),
+  Base = c("Covarianzas (Pearson)", "Correlaciones (Pearson)", "Modelo de un factor (ML)", "Correlaciones policóricas",
+           "Un factor sobre correlaciones policóricas", "AFC ordinal, escala observada (Green y Yang, 2009)"),
+  Valor = f(c(alfa, alfa_std, omega, alfa_ord, omega_ord, omega_cat), 3),
+  `IC 95 %` = c(paste0(ic(ic_feldt), " (Feldt)<br>", ic(ic_boot_alfa), " (bootstrap)"), "", paste0(ic(ic_boot_omega), " (bootstrap)"), "", "", ""),
+  Interpretación = c(
+    paste0("Consistencia interna ", nivel(alfa), ". Supera el mínimo de 0,70 para investigación (Nunnally y Bernstein, 1994), y también lo supera el límite inferior del intervalo."),
+    paste0("Mayor que el alfa bruto (diferencia de ", f(alfa_std - alfa, 3), ") porque los ítems tienen varianzas muy distintas."),
+    paste0("Confiabilidad ", nivel(omega), ". Al no exigir cargas iguales es más adecuado que el alfa para estos datos (Dunn et al., 2014)."),
+    paste0("Confiabilidad ", nivel(alfa_ord), ". Trata las respuestas como ordinales (Zumbo et al., 2007) y corrige la atenuación que produce el efecto techo."),
+    paste0("Confiabilidad ", nivel(omega_ord), ". Combina las dos correcciones: cargas distintas y escala ordinal."),
+    paste0("Confiabilidad ", nivel(omega_cat), ". Corresponde al puntaje que se usa en los análisis y respeta la naturaleza ordinal de los ítems. Es el coeficiente que se recomienda reportar."))
+) |> kable(format = "html", caption = paste0("Coeficientes de confiabilidad del índice de éxito percibido (N = ", n, ", k = ", k, " ítems)"),
+           align = c("l", "l", "r", "r", "l"), escape = FALSE) |>
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |>
+  row_spec(c(1, 6), bold = TRUE) |> column_spec(5, width = "40%")
+```
 
-- Brown, T. A. (2015). *Confirmatory factor analysis for applied research* (2.ª ed.). Guilford Press.
-- Fornell, C. y Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. *Journal of Marketing Research, 18*(1), 39–50.
-- Green, S. B. y Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. *Psychometrika, 74*(1), 155–167.
-- Li, C.-H. (2016). Confirmatory factor analysis with ordinal data: Comparing robust maximum likelihood and diagonally weighted least squares. *Behavior Research Methods, 48*(3), 936–949.
-- Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. *Journal of Statistical Software, 48*(2), 1–36.
-- Dunn, T. J., Baguley, T. y Brunsden, V. (2014). From alpha to omega: A practical solution to the pervasive problem of internal consistency estimation. *British Journal of Psychology, 105*(3), 399–412.
-- Feldt, L. S. (1965). The approximate sampling distribution of Kuder-Richardson reliability coefficient twenty. *Psychometrika, 30*(3), 357–370.
-- Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
-- Nunnally, J. C. y Bernstein, I. H. (1994). *Psychometric theory* (3.ª ed.). McGraw-Hill.
-- Zumbo, B. D., Gadermann, A. M. y Zeisser, C. (2007). Ordinal versions of coefficients alpha and theta for Likert rating scales. *Journal of Modern Applied Statistical Methods, 6*(1), 21–29.
+IC de Feldt (1965) basado en la distribución F; IC bootstrap percentil con `r f(B, 0)` remuestreos de estudiantes.
 
-## Efecto techo
+### Contribución de cada ítem
 
-```{r techo, fig.cap="Distribución del índice de éxito percibido.", fig.height=3.2}
+```{r}
+etq_items <- c("Conceptos clave", "Barrera (invertido)", "Inglés ayudó al desempeño", "Buen desempeño", "Aprendí igual")
+interp_item <- with(diag_items, ifelse(
+  alfa_sin_item > alfa,
+  paste0("Ítem más débil. Discrimina por encima del mínimo de 0,30, pero eliminarlo subiría α a ", f(alfa_sin_item, 3), "."),
+  ifelse(carga >= .70,
+         paste0("Ítem fuerte: carga alta y buena discriminación. Eliminarlo bajaría α a ", f(alfa_sin_item, 3), "."),
+         paste0("Ítem adecuado: carga aceptable y buena discriminación. Eliminarlo bajaría α a ", f(alfa_sin_item, 3), "."))))
+tibble(Ítem = etq_items,
+       Varianza = f(diag_items$varianza),
+       `r ítem-total corregida` = f(diag_items$r_item_total),
+       `α si se elimina` = f(diag_items$alfa_sin_item, 3),
+       Interpretación = interp_item) |>
+  kable(format = "html", caption = "Contribución de cada ítem a la consistencia interna", align = c("l", "r", "r", "r", "l")) |>
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = TRUE) |>
+  row_spec(which(diag_items$alfa_sin_item > alfa), bold = TRUE) |> column_spec(5, width = "45%")
+```
+
+La correlación ítem-total corregida es la correlación de cada ítem con la suma de los otros cuatro; el mínimo de referencia es 0,30.
+
+Todas las estimaciones superan 0,80, de modo que la medida es confiable. El alfa (`r f(alfa, 3)`) es la más conservadora, como cabía esperar al no cumplirse la tau-equivalencia. El ítem de barrera vuelve a aparecer como el más débil: tiene la mayor varianza, la menor correlación con los demás y, si se eliminara, el alfa subiría a `r f(diag_items$alfa_sin_item[2], 3)`. Aun así discrimina por encima del mínimo y es el único ítem que plantea el inglés como obstáculo, un aspecto central para el marco de equidad, por lo que se mantuvo.
+
+## Cálculo del índice {#calculo}
+
+El índice de cada estudiante es el promedio de sus respuestas a los cinco ítems, con el ítem de barrera invertido:
+
+$$
+\text{Índice} = \frac{\text{Conceptos} + (6 - \text{Barrera}) + \text{Inglés ayudó} + \text{Buen desempeño} + \text{Aprendí igual}}{5}
+$$
+
+El resultado va de 1 a 5. El promedio conserva la escala de las respuestas, de modo que un 4,5 se lee como una posición entre "parcialmente" y "totalmente de acuerdo", y cualquier investigador puede reproducirlo. Su costo es que da el mismo peso a todos los ítems, un supuesto que rara vez se cumple (McNeish y Wolf, 2020) y que aquí tampoco se cumple, como mostró la revisión de la tau-equivalencia.
+
+Para saber si ese supuesto altera los resultados, el promedio se comparó con la puntuación factorial del AFC, que pondera cada ítem según su carga. Las dos medidas correlacionan `r f(just_r_fs, 3)` (Spearman: `r f(just_rs_fs, 3)`). Usadas como variable dependiente en la misma regresión, dan un efecto estandarizado del colegio bilingüe casi igual: `r f(just_beta_std[1])` con el promedio y `r f(just_beta_std[2])` con la puntuación factorial. Como ponderar los ítems no cambia nada sustantivo, se prefirió la medida más transparente.
+
+```{r techo, fig.cap="Distribución del índice de éxito percibido. La línea vertical marca la media.", fig.height=3.2}
 ggplot(d, aes(EXITO)) +
   geom_histogram(binwidth = 0.2, boundary = 1, fill = azul, colour = "white") +
   geom_vline(xintercept = mean(d$EXITO), colour = ocre, linewidth = 0.8) +
   annotate("text", x = mean(d$EXITO) - 0.05, y = Inf, vjust = 1.5, hjust = 1, colour = ocre,
            label = paste("Media", f(mean(d$EXITO)))) +
-  scale_x_continuous(breaks = 1:5, limits = c(1, 5.2)) +
-  labs(x = "Índice de éxito percibido (1–5)", y = "Estudiantes") + tema
+  scale_x_continuous(breaks = 1:5, limits = c(1, 5.2), labels = function(x) f(x, 0)) +
+  labs(x = "Índice de éxito percibido (1 a 5)", y = "Estudiantes") + tema
 ```
 
-El índice tiene media `r f(mean(d$EXITO))` (DE `r f(sd(d$EXITO))`) y asimetría negativa (`r f(skew(d$EXITO))`). El `r pct(mean(d$EXITO >= 4))` de los estudiantes tiene un puntaje de 4 o más. Por eso los modelos usan errores estándar robustos y se repiten con una regresión ordinal como prueba de sensibilidad (capítulo \@ref(modelos)).
+El índice tiene media `r f(mean(d$EXITO))` (DE `r f(sd(d$EXITO))`) y asimetría negativa (`r f(skew(d$EXITO))`); el `r pct(mean(d$EXITO >= 4))` de los estudiantes tiene un puntaje de 4 o más. Por este efecto techo los modelos del capítulo \@ref(modelos) usan errores estándar robustos y se repiten con una regresión ordinal.
+
+## Robustez: otras versiones del índice {#robustez-indice}
+
+Una crítica razonable es que los resultados podrían deberse a qué ítems se incluyeron. Para descartarlo, el modelo principal se estimó con cuatro versiones del índice: la elegida; una sin el ítem de barrera, el más afectado por la redacción negativa (capítulo \@ref(validacion)); otra sin los dos ítems que nombran el inglés; y una ampliada con dos ítems de otras dimensiones.
+
+```{r}
+jv |> transmute(Versión = version, Ítems = items, Alfa = f(alfa), `r con el índice elegido` = f(r_indice),
+                `% con índice ≥ 4` = pct(techo),
+                `Efecto del colegio bilingüe (M1)` = f(b_bil), p = fp(p_bil),
+                `Tamaño del efecto (r)` = f(r_rb)) |>
+  tab("Resultados del modelo principal con distintas versiones del índice", align = c("l", rep("r", 7))) |>
+  kable_styling(full_width = TRUE) |> row_spec(1, bold = TRUE)
+```
+
+El efecto del colegio bilingüe se mantiene en todas las versiones, entre `r f(min(jv$b_bil))` y `r f(max(jv$b_bil))` puntos y siempre con p < 0,001. La versión de tres ítems da el efecto más bajo, lo que tiene sentido: al quitar las preguntas que mencionan el inglés se pierde parte de la relación con la escolaridad bilingüe. Aun así el efecto sigue siendo claro, de modo que el hallazgo no depende de que el índice nombre el inglés.
+
+## Síntesis y límites de la medida {#justificacion}
+
+```{r}
+tibble(
+  `Fuente de evidencia` = c("Contenido", "Estructura interna", "Confiabilidad", "Cálculo del puntaje", "Estabilidad de los resultados"),
+  `Qué se comprobó` = c("Los ítems describen resultados del aprendizaje disciplinar y excluyen antecedentes, duplicados y otras dimensiones.",
+                        paste0("Un solo factor: CFI = ", trunc1(fa_["cfi.robust"]), ", SRMR = ", f(fa_["srmr"], 3), "; cargas de ", f(min(cg$est.std)), " a ", f(max(cg$est.std)), "; AVE = ", f(ave), "."),
+                        paste0("Omega categórico = ", f(omega_cat), "; alfa = ", f(alfa), "; todas las estimaciones por encima de 0,80."),
+                        paste0("El promedio correlaciona ", f(just_r_fs), " con la puntuación factorial y da el mismo resultado sustantivo."),
+                        paste0("El efecto del colegio bilingüe se mantiene con 3, 4, 5 y 7 ítems (", f(min(jv$b_bil)), " a ", f(max(jv$b_bil)), ", p < 0,001).")),
+  Sección = c("\\@ref(seleccion)", "\\@ref(afc)", "\\@ref(confiabilidad)", "\\@ref(calculo)", "\\@ref(robustez-indice)")) |>
+  tab("Resumen de la evidencia que respalda el índice de éxito percibido", align = c("l", "l", "r")) |>
+  kable_styling(full_width = TRUE)
+```
+
+En conjunto, el índice de cinco ítems es una medida unidimensional, confiable y estable para la variable dependiente del artículo. Tiene, sin embargo, tres límites que deben reconocerse. Es una autopercepción y no un indicador de rendimiento: la encuesta no incluye calificaciones, y un estudiante puede sentirse exitoso sin que sus notas lo reflejen, o al revés. El análisis del cuestionario completo mostró además que, para los estudiantes, entender en inglés y aprender la materia son casi lo mismo (capítulo \@ref(validacion)); por eso conviene nombrar el constructo con precisión, como *autopercepción del éxito en el aprendizaje disciplinar en inglés*, y no como éxito académico en general. Por último, la mayoría de los estudiantes puntúa alto, así que el índice distingue mejor entre estudiantes de la parte media de la escala que entre los del extremo superior.
 
 <div class="decision">
-¿Usamos este índice de 5 ítems, la versión de 4 sin el ítem de barrera o la de 7? El AFC ordinal respalda la versión de 5 ítems, así que la decisión sobre el ítem de barrera puede tomarse por razones conceptuales.
+¿Usamos este índice de 5 ítems, la versión de 4 sin el ítem de barrera o la de 7? La evidencia respalda la versión de 5 ítems y los resultados son los mismos con cualquiera de ellas, así que la decisión sobre el ítem de barrera puede tomarse por razones conceptuales.
 </div>
+
+## Texto sugerido para el artículo {#texto-indice}
+
+> La variable dependiente, la autopercepción del éxito en el aprendizaje disciplinar en inglés, se midió con cinco ítems de la dimensión Aprendizaje disciplinar del cuestionario. Los ítems se seleccionaron por su contenido antes del análisis psicométrico: se incluyeron los que describen un resultado del aprendizaje y se excluyeron uno que describe un recurso previo y otro duplicado. Un análisis factorial confirmatorio con estimador WLSMV respaldó la unidimensionalidad de la medida (χ²(`r fa_["df.scaled"]`) = `r f(fa_["chisq.scaled"])`, p = `r f(fa_["pvalue.scaled"], 3)`; CFI = `r trunc1(fa_["cfi.robust"])`; RMSEA = `r f(fa_["rmsea.robust"], 3)`, IC 90 % [`r f(fa_["rmsea.ci.lower.robust"], 3)`, `r f(fa_["rmsea.ci.upper.robust"], 3)`]; SRMR = `r f(fa_["srmr"], 3)`), con cargas estandarizadas entre `r f(min(cg$est.std))` y `r f(max(cg$est.std))` y una varianza media extraída de `r f(ave)`. La confiabilidad fue adecuada (omega categórico = `r f(omega_cat)`; α = `r f(alfa)`). El índice se calculó como el promedio de los cinco ítems, tras invertir el ítem redactado en negativo; este promedio correlacionó `r f(just_r_fs)` con la puntuación factorial del modelo, y los resultados principales se mantuvieron al construir el índice con tres, cuatro o siete ítems.
+
+## Referencias del capítulo {-}
+
+- American Educational Research Association, American Psychological Association y National Council on Measurement in Education. (2014). *Standards for educational and psychological testing*. American Educational Research Association.
+- Brown, T. A. (2015). *Confirmatory factor analysis for applied research* (2.ª ed.). Guilford Press.
+- Dunn, T. J., Baguley, T. y Brunsden, V. (2014). From alpha to omega: A practical solution to the pervasive problem of internal consistency estimation. *British Journal of Psychology, 105*(3), 399–412.
+- Feldt, L. S. (1965). The approximate sampling distribution of Kuder-Richardson reliability coefficient twenty. *Psychometrika, 30*(3), 357–370.
+- Fornell, C. y Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. *Journal of Marketing Research, 18*(1), 39–50.
+- Green, S. B. y Yang, Y. (2009). Reliability of summed item scores using structural equation modeling: An alternative to coefficient alpha. *Psychometrika, 74*(1), 155–167.
+- Hu, L. y Bentler, P. M. (1999). Cutoff criteria for fit indexes in covariance structure analysis. *Structural Equation Modeling, 6*(1), 1–55.
+- Li, C.-H. (2016). Confirmatory factor analysis with ordinal data: Comparing robust maximum likelihood and diagonally weighted least squares. *Behavior Research Methods, 48*(3), 936–949.
+- Macaro, E., Curle, S., Pun, J., An, J. y Dearden, J. (2018). A systematic review of English medium instruction in higher education. *Language Teaching, 51*(1), 36–76.
+- McNeish, D. y Wolf, M. G. (2020). Thinking twice about sum scores. *Behavior Research Methods, 52*(6), 2287–2305.
+- Nunnally, J. C. y Bernstein, I. H. (1994). *Psychometric theory* (3.ª ed.). McGraw-Hill.
+- Rosseel, Y. (2012). lavaan: An R package for structural equation modeling. *Journal of Statistical Software, 48*(2), 1–36.
+- Zumbo, B. D., Gadermann, A. M. y Zeisser, C. (2007). Ordinal versions of coefficients alpha and theta for Likert rating scales. *Journal of Modern Applied Statistical Methods, 6*(1), 21–29.
